@@ -22,10 +22,17 @@ Activate the `conda` environment
 conda activate CDUS-Lift
 ```
 
-Run the program (make sure the Intel Realsense D435 is connected)
+Run the program in its default configuration (make sure the Intel Realsense D435 
+is connected)
 
 ```
-make 
+make run_default
+```
+
+Or run it with your customized neural network
+
+```
+make run_custom
 ```
 
 # What did I do?
@@ -73,6 +80,12 @@ Finally, go back to the `root` and execute the following command
 
 ```
 make train
+```
+
+In order to use the custom `yolo` network use the following command
+
+```
+make run_custom
 ```
 
 # References
