@@ -11,7 +11,7 @@ DATA_CONFIG = $(CUSTOM_YOLO_DIR)/data/custom_data.yaml
 HYP_CONFIG = $(YOLO_DIR)/data/hyp.scratch.custom.yaml
 CFG_CONFIG = $(CUSTOM_YOLO_DIR)/cfg/training/custom_cfg.yaml
 NAME = yolov7-custom
-WEIGHTS = $(CUSTOM_YOLO_DIR)/weights/default/yolov7.pt
+WEIGHTS = $(CUSTOM_YOLO_DIR)/runs/default/yolov7/weights/default/yolov7.pt
 
 # Run the program configuration
 MAIN = main.py
