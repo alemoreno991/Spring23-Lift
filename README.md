@@ -39,4 +39,19 @@ Realsense D435` and it worked.
 I also trained the `yolo` neural network to detect a custom made feature (jack 
 sparrow). I tested this with the `Intel Realsense D435`.
 
+# References
 
+Understanding `yolo` and `Realsense`
+
+- [How To Deploy YOLOv7 on Live Webcam for Custom Object Detection with OpenCV](https://www.youtube.com/watch?v=XzUMigbYRUI&t=452s)
+- [Object detection with YOLO V3 and Realsense camera](https://www.youtube.com/watch?v=6Ps7oOqoJaw&t=376s)
+- [How To Use YOLOv7 Model for Object Detection](https://www.youtube.com/watch?v=IboFrLHwxDg&t=10s)
+
+Understanding 3D positioning
+
+- [Position estimation of an object with YOLO using RealSense](https://www.youtube.com/watch?v=--81OoXMvlw&t=260s)
+
+Understanding `yolo` customization
+
+- [Official YOLO v7 Custom Object Detection Tutorial | Windows & Linux](https://www.youtube.com/watch?v=-QWxJ0j9EY8&t=1s)
+- [Official YOLOv7 | Object Detection](https://www.youtube.com/watch?v=n0Lp59zjQPE&t=2s)
