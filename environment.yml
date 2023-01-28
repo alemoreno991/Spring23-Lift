@@ -1,4 +1,4 @@
-name: yoloV7
+name: CDUS-Lift
 channels:
   - conda-forge
   - defaults
