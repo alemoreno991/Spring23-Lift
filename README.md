@@ -88,6 +88,21 @@ In order to use the custom `yolo` network use the following command
 make run_custom
 ```
 
+## Third
+
+A `Unity` simulation of the **J.J.Pickle Research Center** was implemented. 
+Then, the `Unity Perception Package` was used to generate a randomized synthetic
+dataset (lighting, rotations, translations, color, hue). 
+
+Since the output format offered by `Unity` is not compatible with `YOLOv7`, 
+[Roboflow](https://app.roboflow.com/) was used to further augment the dataset:
+
+![Roboflow Augmentation](./doc/img/roboflow_augmentation.png)
+
+Finally, the dataset was exported in `yoloV7` format and trained locally as 
+explained in the previous section. The dataset has ~2.5K images and was split 
+into train, validation and test (~80%, ~15%, ~5%).
+
 # References
 
 Understanding `yolo` and `Realsense`
@@ -106,3 +121,13 @@ Understanding `yolo` customization
 - [Official YOLOv7 | Object Detection](https://www.youtube.com/watch?v=n0Lp59zjQPE&t=2s)
 - [Albumentations](https://albumentations.ai/docs/)
 - [Albumentation tutorial](https://www.youtube.com/watch?v=rAdLwKJBvPM&list=PLhhyoLH6IjfxeoooqP9rhU3HJIAVAJ3Vz&index=12&t=39s)
+
+Unity Perception
+
+- [Unity Perception Tutorial](https://www.youtube.com/watch?v=mkVE2Yhe454&t=1251s)
+- [Generate a custom marker](https://www.youtube.com/watch?v=om6QtMb_wwo&t=146s)
+- [Simulating J.J.Pickle](https://www.youtube.com/watch?v=ddy12WHqt-M&t=492s)
+
+Roboflow
+
+- 
