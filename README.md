@@ -106,3 +106,6 @@ Understanding `yolo` customization
 - [Official YOLOv7 | Object Detection](https://www.youtube.com/watch?v=n0Lp59zjQPE&t=2s)
 - [Albumentations](https://albumentations.ai/docs/)
 - [Albumentation tutorial](https://www.youtube.com/watch?v=rAdLwKJBvPM&list=PLhhyoLH6IjfxeoooqP9rhU3HJIAVAJ3Vz&index=12&t=39s)
+
+
+Dallin editing the readme
