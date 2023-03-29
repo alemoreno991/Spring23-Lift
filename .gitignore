@@ -1,5 +1,6 @@
-*.mp4 
-*.webm 
+raw_data/
+doc/
+.idea/
 
 customize_yolo/*
 !customize_yolo/runs
