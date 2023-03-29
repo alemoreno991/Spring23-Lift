@@ -103,6 +103,12 @@ Finally, the dataset was exported in `yoloV7` format and trained locally as
 explained in the previous section. The dataset has ~2.5K images and was split 
 into train, validation and test (~80%, ~15%, ~5%).
 
+# Data
+
+Since GitHub does not offer a lot of storage, the data used during this project
+can be found in the [UT Box](https://utexas.app.box.com/folder/193679796828) 
+in the `CDUS-development/raw_data` folder.
+
 # References
 
 Understanding `yolo` and `Realsense`
