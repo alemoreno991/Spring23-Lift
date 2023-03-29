@@ -1,3 +1,6 @@
+*.mp4 
+*.webm 
+
 customize_yolo/*
 !customize_yolo/runs
 customize_yolo/runs/*
