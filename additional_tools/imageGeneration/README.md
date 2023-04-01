@@ -1,7 +1,7 @@
 
 # SAMPLE IMAGE GENERATORS
 ## 1. DEPENDENCIES
-#
+
 ### 1a. SVG
 The svg sample image generator (generateSampleImages_svg.py) is dependent on [drawsvg](https://github.com/cduck/drawsvg) and the library can be installed with pip with the following command:
 
@@ -11,7 +11,7 @@ The svg sample image generator (generateSampleImages_svg.py) is dependent on [dr
 The png sample image generator (generateSampleImages_png.py) is dependent on [opencv](https://opencv.org) whose installation instructinos can be found through the link
 #
 ## 2. GENERATING IMAGES
-#
+
 ### 2a. SVG
 Using the generateSampleImages_svg.py script with the following command will generate all 255 variations and export each as an svg image deposited into the svg_images folder:
 
