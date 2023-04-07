@@ -232,7 +232,7 @@ namespace Classification_Filter{
             2, Size( 2*int( CLOSING_MORPH_SIZE ) + 1, 2*int( CLOSING_MORPH_SIZE )+1 ), Point( int( CLOSING_MORPH_SIZE ), int( CLOSING_MORPH_SIZE ) ) 
         );
         morphologyEx( src_blur, src_eval_contours, 3, element1 );  
-        imshow("checking",src_blur); waitKey();
+        // imshow("checking",src_blur); waitKey();
         // SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - END
 
 
@@ -275,7 +275,7 @@ namespace Classification_Filter{
                         int anglesign = int( approx_rect.angle > 1 ) - int( approx_rect.angle < 1);
                         rect_contour_angles.push_back( - anglesign * ( 90 - fabs(approx_rect.angle) ) );;
                     }
-                    rect_contour_angles.push_back(approx_rect.angle);
+                    // rect_contour_angles.push_back(approx_rect.angle);
                     if(DEBUG_MODE && DECODER_VERBOSE_MODE){
                         std::cout << "[DEBUG] Contour RECT angle: " <<   approx_rect.angle << std::endl;
                         std::cout << "[DEBUG] Contour RECT Centroid: " <<   contour_centroid << std::endl;
@@ -308,29 +308,32 @@ namespace Classification_Filter{
                 if(rect_contour_centroids.size()>0 ){ showContours(rect_contours,hierarchy,"TOO MANY IDENTIFYING BARS",image); waitKey();}; 
             }
             
-            if( rect_contour_centroids.size() > 4 ){
+            rect_contours_corr.push_back( rect_contours[0] );
+            rect_contour_centroids_corr.push_back( rect_contour_centroids[0] );
+            rect_contour_angles_corr.push_back( rect_contour_angles[0] );
 
-                rect_contour_centroids_corr.push_back( rect_contour_centroids[0] );
-                for( int ii = 1; ii < rect_contour_centroids.size(); ii++ ){
-                    
-                    bool pass_flag = true;
-                    for( int jj = 0; jj < rect_contour_centroids_corr.size(); jj++ ){
-                        if( euclideanDistance( rect_contour_centroids[ii] , rect_contour_centroids_corr[jj] ) <= CONTOUR_ED_THRES ){ 
-                            pass_flag = false; 
-                            break; 
-                        } 
-                    }
-                    
-                    if( pass_flag ){
-                        rect_contour_centroids_corr.push_back( rect_contour_centroids[ii] );
-                        rect_contour_angles_corr.push_back( rect_contour_angles[ii] );
-                    }
-
+            for( int ii = 1; ii < rect_contour_centroids.size(); ii++ ){
+                
+                bool pass_flag = true;
+                for( int jj = 0; jj < rect_contour_centroids_corr.size(); jj++ ){
+                    if( euclideanDistance( rect_contour_centroids[ii] , rect_contour_centroids_corr[jj] ) <= CONTOUR_ED_THRES ){ 
+                        pass_flag = false; 
+                        break; 
+                    } 
                 }
-                rect_contour_centroids = rect_contour_centroids_corr;
-                rect_contour_angles = rect_contour_angles_corr;
-                if(DEBUG_MODE) std::cout << "[WARNING] ID BAR CORRECTION ATTEMPTED: "<< rect_contour_centroids.size() << std::endl;
+                
+                if( pass_flag ){
+                    rect_contours_corr.push_back( rect_contours[ii] );
+                    rect_contour_centroids_corr.push_back( rect_contour_centroids[ii] );
+                    rect_contour_angles_corr.push_back( rect_contour_angles[ii] );
+                }
+
             }
+            rect_contours = rect_contours_corr;
+            rect_contour_centroids = rect_contour_centroids_corr;
+            rect_contour_angles = rect_contour_angles_corr;
+            if(DEBUG_MODE) std::cout << "[WARNING] ID BAR CORRECTION ATTEMPTED: "<< rect_contour_centroids.size() << std::endl;
+        
 
             if( rect_contour_centroids.size() > 4 ){
                 if(DEBUG_MODE){
@@ -461,6 +464,7 @@ namespace Classification_Filter{
         if(DECODER_SHOWCASE_MODE){
             Mat show_image = image;
             showContoursAndCentersOnImage(circ_contours,hierarchy,circ_contour_centroids,"PASSING CIRCULAR CONTOURS IN D1 AND THEIR CENTROIDS",show_image); 
+            waitKey();
         }
 
         Mat decode_image = encoded_src_threshed;
