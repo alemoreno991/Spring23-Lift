@@ -10,6 +10,20 @@ def showContours( contoursi, hierarchy , title, imageref ):
         cv.drawContours( drawing, [contoursi[ii]], 0, color, 3 )
     cv.imshow( title, drawing )
 
+def showContoursOnImage( contoursi, hierarchy , title, imageref ):
+    drawing = imageref
+    for ii in range(0,len(contoursi)): 
+        color = ( int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)) )
+        cv.drawContours( drawing, [contoursi[ii]], 0, color, 3 )
+    cv.imshow( title, drawing )
+
+def drawContoursOnImage( contoursi, hierarchy , imageref ):
+    drawing = imageref
+    for ii in range(0,len(contoursi)): 
+        color = ( int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)) )
+        cv.drawContours( drawing, [contoursi[ii]], 0, color, 3 )
+    return drawing
+
 def showContoursAndCenters( contoursi, hierarchy , centers, title, imageref ):
     drawing = np.zeros( imageref.shape , dtype=np.uint8)
     for ii in range(0,len(contoursi)): 
