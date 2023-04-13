@@ -266,6 +266,7 @@ def extractD1Domain(image, debug_mode):
                         rect_contour_areas = [ rect_contour_areas[sorted_indx[ii]] for ii in range(0,RECT_CUTOFF_SIZE) ]
                         poly_contour_areas = [ poly_contour_areas[sorted_indx[ii]] for ii in range(0,RECT_CUTOFF_SIZE) ]
 
+                size_before = len(rect_contour_areas)
                 while( len(rect_contour_areas) > 4 ):
                         rect_contours_corr = []
                         rect_contour_centroids_corr = []
@@ -288,6 +289,11 @@ def extractD1Domain(image, debug_mode):
                         rect_contour_angles = rect_contour_angles_corr
                         rect_contour_areas = rect_contour_areas_corr
                         poly_contour_areas = poly_contour_areas_corr
+
+                        if( len(rect_contour_areas) ) == size_before:
+                                break 
+                        else:
+                                size_before = len(rect_contour_areas) 
 
                 if(debug_mode):
                         dt.showContours(rect_contours,hierarchy,"CONTOURS AFTER SECOND PROTECTION",image)
