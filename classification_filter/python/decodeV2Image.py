@@ -41,11 +41,12 @@ SEGMENT_SCIRC_RATIO = 0.0872664626
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 GREYSCALE_TO_255_THRESHOLD = 200
 
-RECT_AREA_PERCENT_THRESHOLD = 0.5
+RECT_AREA_PERCENT_THRESHOLD = 0.15
 RECT_ASPECT_RATIO_LOWER_PERECNT_ERROR_THRESHOLD = 20
 RECT_ASPECT_RATIO_UPPER_PERECNT_ERROR_THRESHOLD = 40
 RECT_IDENTIFIER_SIDES_LOWER_THRESHOLD = 4
 RECT_IDENTIFIER_SIDES_UPPER_THRESHOLD = 15
+RECT_CUTOFF_SIZE = 7
 
 CONTOUR_ED_THRES = 20
 
@@ -169,6 +170,8 @@ def extractD1Domain(image, debug_mode):
         rect_contours_pass1 = []
         rect_contour_centroids = []
         rect_contour_angles = []
+        rect_contour_areas = []
+        poly_contour_areas = []
         canny_output = cv.Canny( src_eval_contours, 10, 200, True )
         contours, hierarchy = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_KCOS )
         for ii in range(0,len(contours)):
@@ -183,6 +186,8 @@ def extractD1Domain(image, debug_mode):
 
                         if(    approx_aspectr > (1 - float(RECT_ASPECT_RATIO_LOWER_PERECNT_ERROR_THRESHOLD)/100) * MEASURED_ASPECT_RATIO 
                            and approx_aspectr < (1 + float(RECT_ASPECT_RATIO_UPPER_PERECNT_ERROR_THRESHOLD)/100) * MEASURED_ASPECT_RATIO ):
+                                rect_contour_areas.append( approx_rect_size[0]*approx_rect_size[1] )
+                                poly_contour_areas.append( approx_cp_area ) # NOT THE SAME AS THE ONE ABOVE
                                 rect_contours.append( contours[ii] )
                                 rect_contour_centroids.append(approx_rect_center)
                                 if( approx_rect_size[0] < approx_rect_size[1] ):
@@ -201,29 +206,31 @@ def extractD1Domain(image, debug_mode):
                 cv.waitKey(0)
         #  FIND LOCATING BARS - END
 
-        if(DECODER_SHOWCASE_MODE):
-                dt.showContoursAndCentersOnImage(rect_contours,hierarchy,rect_contour_centroids,"PASSING CONTOURS ON IMAGE",image)
-                cv.waitKey(0)
-
+        #########################################################################################################################################
         #  PROTECTION AGAINST MORE/LESS THAN FOR 4 BARS - START
-        rect_contours_corr = []
-        rect_contour_centroids_corr = []
-        rect_contour_angles_corr = []
-
         if(debug_mode):
                 print( "[DEBUG] FOUND: " + str(len(rect_contour_centroids)) + " IDENTIFING BARS" )
                 dt.showContours(rect_contours,hierarchy,"CONTOURS THAT PASS ALL GEOMETRY TESTS",image)
                 cv.waitKey(0)
 
+        # 1ST PROTECTION FOR MORE THAN 4 BARS (CENTROID PROXIMITY) -START
+        rect_contours_corr = []
+        rect_contour_centroids_corr = []
+        rect_contour_angles_corr = []
+        rect_contour_areas_corr = []
+        poly_contour_areas_corr = []
         rect_contours_corr.append( rect_contours[0] )
         rect_contour_centroids_corr.append( rect_contour_centroids[0] )
         rect_contour_angles_corr.append( rect_contour_angles[0] )
+        rect_contour_areas_corr.append( rect_contour_areas[0] )
+        poly_contour_areas_corr.append( poly_contour_areas[0] )
 
         for ii in range( 1, len(rect_contour_centroids) ):
                 pass_flag = True
                 
                 for jj in range( 0, len(rect_contour_centroids_corr) ):
                         if( est.euclideanDistance( rect_contour_centroids[ii], rect_contour_centroids_corr[jj] ) <= float(CONTOUR_ED_THRES) ):
+                                # DO A SIZE CHECK TO CHOOSE WHICH TO REPLACE 
                                 pass_flag = False 
                                 break
                 
@@ -231,21 +238,117 @@ def extractD1Domain(image, debug_mode):
                         rect_contours_corr.append( rect_contours[ii] )
                         rect_contour_centroids_corr.append( rect_contour_centroids[ii] )
                         rect_contour_angles_corr.append( rect_contour_angles[ii] )
+                        rect_contour_areas_corr.append( rect_contour_areas[ii]  )
+                        poly_contour_areas_corr.append( poly_contour_areas[ii] )
+
         
         rect_contours = rect_contours_corr
         rect_contour_centroids = rect_contour_centroids_corr
         rect_contour_angles = rect_contour_angles_corr
+        rect_contour_areas = rect_contour_areas_corr
+        poly_contour_areas = poly_contour_areas_corr
+        if(debug_mode):
+                        dt.showContours(rect_contours,hierarchy,"CONTOURS AFTER FIRST PROTECTION",image)
+                        cv.waitKey(0)
+        # 1ST PROTECTION FOR MORE THAN 4 BARS (CENTROID PROXIMITY) - END
 
-        if( len(rect_contour_centroids) > 4 ):
+
+        # 2ND PROTECTION FOR MORE THAN 4 BARS ( RECT APPROX STD METHOD ) - START
+        if( len(rect_contour_areas) > 4 and len(rect_contour_centroids) > 1 ):
+
+                # CUTOFF IF TOO MANY 
+                if( len(rect_contour_areas) > RECT_CUTOFF_SIZE ):
+                        sorted_indx = np.argsort(  np.array( rect_contour_areas ) )
+                        # TRIM THE NUMBER OF CONTOURS BASED ON AREA
+                        rect_contours = [ rect_contours[sorted_indx[ii]] for ii in range(0,RECT_CUTOFF_SIZE) ]
+                        rect_contour_centroids = [ rect_contour_centroids[sorted_indx[ii]] for ii in range(0,RECT_CUTOFF_SIZE) ]
+                        rect_contour_angles = [ rect_contour_angles[sorted_indx[ii]] for ii in range(0,RECT_CUTOFF_SIZE) ]
+                        rect_contour_areas = [ rect_contour_areas[sorted_indx[ii]] for ii in range(0,RECT_CUTOFF_SIZE) ]
+                        poly_contour_areas = [ poly_contour_areas[sorted_indx[ii]] for ii in range(0,RECT_CUTOFF_SIZE) ]
+
+                while( len(rect_contour_areas) > 4 ):
+                        rect_contours_corr = []
+                        rect_contour_centroids_corr = []
+                        rect_contour_angles_corr = []
+                        rect_contour_areas_corr = []
+                        poly_contour_areas_corr = []
+                        rect_contour_areas_mean = sum(  rect_contour_areas )/len(rect_contour_areas)
+                        var = sum(  [ pow( recti_area - rect_contour_areas_mean, 2 ) for recti_area in rect_contour_areas]  ) / len(rect_contour_areas)
+                        std = pow( var, 0.5 )
+                        for ii in range( 0, len(rect_contour_centroids) ):
+                                if(  abs(rect_contour_areas_mean-rect_contour_areas[ii]) <= std ):
+                                        rect_contours_corr.append( rect_contours[ii] )
+                                        rect_contour_centroids_corr.append( rect_contour_centroids[ii] )
+                                        rect_contour_angles_corr.append( rect_contour_angles[ii] )
+                                        rect_contour_areas_corr.append( rect_contour_areas[ii]  )
+                                        poly_contour_areas_corr.append( poly_contour_areas[ii] )
+
+                        rect_contours = rect_contours_corr
+                        rect_contour_centroids = rect_contour_centroids_corr
+                        rect_contour_angles = rect_contour_angles_corr
+                        rect_contour_areas = rect_contour_areas_corr
+                        poly_contour_areas = poly_contour_areas_corr
+
                 if(debug_mode):
-                        print( "[ERROR] ID BAR CORRECTION FAILED AS THERE ARE >4 ID-BARS: " + str(len(rect_contour_centroids))  )
+                        dt.showContours(rect_contours,hierarchy,"CONTOURS AFTER SECOND PROTECTION",image)
+                        cv.waitKey(0)
+        # 2ND PROTECTION FOR MORE THAN 4 BARS ( RECT APPROX STD METHOD ) - END
+
+
+        # # 3RD PROTECTION FOR MORE THAN 4 BARS ( CONTOUR TRUE STD METHOD ) - START
+        # if( len(rect_contour_areas) > 4 and len(rect_contour_centroids) > 1 ):
+        #         rect_contours_corr = []
+        #         rect_contour_centroids_corr = []
+        #         rect_contour_angles_corr = []
+        #         rect_contour_areas_corr = []
+        #         poly_contour_areas_corr = []
+                
+        #         # CUTOFF IF TOO MANY 
+        #         if( len(rect_contour_areas) > RECT_CUTOFF_SIZE ):
+        #                 sorted_indx = np.argsort(  np.array( rect_contour_areas_corr ) )
+        #                 # TRIM THE NUMBER OF CONTOURS BASED ON AREA
+        #                 rect_contours = [ rect_contours[sorted_indx[ii]] for ii in range(0,RECT_CUTOFF_SIZE) ]
+        #                 rect_contour_centroids = [ rect_contour_centroids[sorted_indx[ii]] for ii in range(0,RECT_CUTOFF_SIZE) ]
+        #                 rect_contour_angles = [ rect_contour_angles[sorted_indx[ii]] for ii in range(0,RECT_CUTOFF_SIZE) ]
+        #                 rect_contour_areas = [ rect_contour_areas[sorted_indx[ii]] for ii in range(0,RECT_CUTOFF_SIZE) ]
+        #                 poly_contour_areas = [ poly_contour_areas[sorted_indx[ii]] for ii in range(0,RECT_CUTOFF_SIZE) ]
+
+
+        #         poly_contour_areas_mean = sum(  poly_contour_areas )/len(poly_contour_areas)
+        #         var = sum(  [ pow( polyi_area - poly_contour_areas_mean, 2 ) for polyi_area in poly_contour_areas]  ) / len(poly_contour_areas)
+        #         std = pow( var, 0.5 )
+        #         for ii in range( 0, len(rect_contour_centroids) ):
+        #                 if(  abs(poly_contour_areas_mean-poly_contour_areas[ii]) <= std ):
+        #                         rect_contours_corr.append( rect_contours[ii] )
+        #                         rect_contour_centroids_corr.append( rect_contour_centroids[ii] )
+        #                         rect_contour_angles_corr.append( rect_contour_angles[ii] )
+        #                         rect_contour_areas_corr.append( rect_contour_areas[ii]  )
+        #                         poly_contour_areas_corr.append( poly_contour_areas[ii] )
+
+        #         rect_contours = rect_contours_corr
+        #         rect_contour_centroids = rect_contour_centroids_corr
+        #         rect_contour_angles = rect_contour_angles_corr
+        #         rect_contour_areas = rect_contour_areas_corr
+        #         poly_contour_areas = poly_contour_areas_corr
+        #         if(debug_mode):
+        #                 dt.showContours(rect_contours,hierarchy,"CONTOURS AFTER THIRD PROTECTION",image)
+        #                 cv.waitKey(0)
+        # # 3RD PROTECTION FOR MORE THAN 4 BARS ( CONTOUR TRUE STD METHOD ) - END
+
+
+        if( len(rect_contour_centroids) > 4 or len(rect_contour_centroids) < 2 ):
+                if(debug_mode):
+                        print( "[ERROR] ID BAR CORRECTION FAILED AS THERE ARE >4 ID-BARS OR >2 ID-BARS: " + str(len(rect_contour_centroids))  )
                 return []
         else:
-                if(debug_mode):
-                        print( "[DEBUG] ID BAR CORRECTION SUCCESS AS THERE ARE <4 ID-BARS: " + str(len(rect_contour_centroids))  )
-                        dt.showContours(rect_contours,hierarchy,"CONTOURS THAT PASS ALL GEOMETRY AND REDUCTION TESTS",image)
-                        cv.waitKey(0)
+                print( "[DEBUG] ID BAR CORRECTION SUCCESS AS THERE ARE <4 ID-BARS: " + str(len(rect_contour_centroids))  )
+
+        if(DECODER_SHOWCASE_MODE):
+                dt.showContoursAndCentersOnImage(rect_contours,hierarchy,rect_contour_centroids,"PASSING CONTOURS ON IMAGE",image)
+                cv.waitKey(0)
         #  PROTECTION AGAINST MORE/LESS THAN FOR 4 BARS - END
+        #########################################################################################################################################
+
 
         warped_image = []
         fc_median_distance = 0.
