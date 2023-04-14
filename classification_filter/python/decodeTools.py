@@ -5,6 +5,39 @@ import metrics2D as est
 import decodeConst as dcdc
 import drawingTools as dt
 
+def determineCandidateRectIDbars( src_atleast_grys, debug_mode ):
+        img_height, img_width = src_atleast_grys.shape
+        rect_contours, rect_contours_pass1, rect_contour_centroids, rect_contour_angles, rect_contour_areas, poly_contour_areas = [], [], [], [], [], []
+        canny_output = cv.Canny( src_atleast_grys, 10, 200, True )
+        contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_KCOS )
+        for ii in range(0,len(contours)):
+                approx_cp = cv.approxPolyDP( contours[ii], 0.025*cv.arcLength(contours[ii],True), True )
+                approx_cp_area = abs( cv.contourArea(approx_cp) )
+                rect_contours_pass1.append( contours[ii] )
+                if( (     approx_cp_area > img_height * img_width * pow(float(dcdc.RECT_AREA_PERCENT_THRESHOLD)/100,2) ) \
+                      and len(approx_cp) >= dcdc.RECT_IDENTIFIER_SIDES_LOWER_THRESHOLD \
+                      and len(approx_cp) <= dcdc.RECT_IDENTIFIER_SIDES_UPPER_THRESHOLD  ):
+                        approx_rect_center, approx_rect_size, approx_rect_angle  = cv.minAreaRect(approx_cp)
+                        approx_aspectr = max( approx_rect_size[0]/approx_rect_size[1], approx_rect_size[1]/approx_rect_size[0] )
+
+                        if(    approx_aspectr > (1 - float(dcdc.RECT_ASPECT_RATIO_LOWER_PERECNT_ERROR_THRESHOLD)/100) * dcdc.MEASURED_ASPECT_RATIO 
+                           and approx_aspectr < (1 + float(dcdc.RECT_ASPECT_RATIO_UPPER_PERECNT_ERROR_THRESHOLD)/100) * dcdc.MEASURED_ASPECT_RATIO ):
+                                rect_contour_areas.append( approx_rect_size[0]*approx_rect_size[1] )
+                                poly_contour_areas.append( approx_cp_area ) # NOT THE SAME AS THE ONE ABOVE
+                                rect_contours.append( contours[ii] )
+                                rect_contour_centroids.append(approx_rect_center)
+                                if( approx_rect_size[0] < approx_rect_size[1] ):
+                                        rect_contour_angles.append(approx_rect_angle)
+                                else:
+                                        rect_contour_angles.append( 90. - approx_rect_angle )
+        
+        if(debug_mode):
+                dt.showContours(contours,"CONTOURS IN D3",src_atleast_grys.shape)
+                cv.waitKey(0)
+
+        return rect_contours, rect_contours_pass1, rect_contour_centroids, rect_contour_angles, rect_contour_areas, poly_contour_areas
+
+
 
 def determineWarpedImageFrom4IdBars(image, rect_contour_centroids, debug_mode):
         fc_relative_angles = []
@@ -242,7 +275,7 @@ def determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debu
                                 crnr3_img = cid_eval_SegementSubmatrix
 
                         canny_output = cv.Canny( cid_eval_SegementSubmatrix, 10, 200 )
-                        contours, hierarchy = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_L1 )
+                        contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_L1 )
                         for kk in range(0,len(contours)):
                                 approx_cp = cv.approxPolyDP( contours[kk], 0.01*cv.arcLength(contours[kk],True), True )
                                 if( len(approx_cp) > dcdc.CIRC_IDENTIFIER_SIDES_THRESHOLD  ):
@@ -281,10 +314,10 @@ def determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debu
                 crnr3_show_img = crnr3_img
 
                 cv.imshow("THRESHED IMAGE OF ENCODING", src_eval_contours)
-                dt.showContoursOnImage(crnr0_cntrs,hierarchy,"CORNER0 CONTOURS IN D1",crnr0_show_img)
-                dt.showContoursOnImage(crnr1_cntrs,hierarchy,"CORNER1 CONTOURS IN D1",crnr1_show_img)
-                dt.showContoursOnImage(crnr2_cntrs,hierarchy,"CORNER2 CONTOURS IN D1",crnr2_show_img)
-                dt.showContoursOnImage(crnr3_cntrs,hierarchy,"CORNER3 CONTOURS IN D1",crnr3_show_img)
+                dt.showContoursOnImage(crnr0_cntrs,"CORNER0 CONTOURS IN D1",crnr0_show_img)
+                dt.showContoursOnImage(crnr1_cntrs,"CORNER1 CONTOURS IN D1",crnr1_show_img)
+                dt.showContoursOnImage(crnr2_cntrs,"CORNER2 CONTOURS IN D1",crnr2_show_img)
+                dt.showContoursOnImage(crnr3_cntrs,"CORNER3 CONTOURS IN D1",crnr3_show_img)
                 cv.waitKey(0)
 
         if(dcdc.DECODER_SHOWCASE_MODE):
@@ -295,16 +328,16 @@ def determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debu
                                 drawingSegementSubmatrix = show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ]
                                 if( indx == 0 ):
                                         show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = \
-                                                dt.drawContoursOnImage( crnr0_cntrs, hierarchy , drawingSegementSubmatrix )
+                                                dt.drawContoursOnImage( crnr0_cntrs , drawingSegementSubmatrix )
                                 elif( indx == 2 ):
                                         show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = \
-                                                dt.drawContoursOnImage( crnr1_cntrs, hierarchy , drawingSegementSubmatrix )
+                                                dt.drawContoursOnImage( crnr1_cntrs , drawingSegementSubmatrix )
                                 elif( indx == 6 ):
                                         show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = \
-                                                dt.drawContoursOnImage( crnr2_cntrs, hierarchy , drawingSegementSubmatrix )
+                                                dt.drawContoursOnImage( crnr2_cntrs , drawingSegementSubmatrix )
                                 elif( indx == 8 ):
                                         show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = \
-                                                dt.drawContoursOnImage( crnr3_cntrs, hierarchy , drawingSegementSubmatrix )
+                                                dt.drawContoursOnImage( crnr3_cntrs , drawingSegementSubmatrix )
                 cv.imshow("PASSING CIRCULAR CONTOURS IN D1 AND THEIR CENTROIDS",show_image)
                 cv.waitKey(0)
 
@@ -443,6 +476,64 @@ def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid
                                                         segmentSubSubMatrix = sSM_thresh_bin[ kk*row_sub_seg:(kk+1)*row_sub_seg-1, ll*col_sub_seg:(ll+1)*col_sub_seg-1 ]
                                                         segment_percentw = segment_percentw + cv.sumElems(segmentSubSubMatrix)[0]/(0.75*segment_area)
                                 
+                                segment_percentw_vec.append(segment_percentw)
+
+                                if( abs(segment_percentw - 0.5) > dcdc.DECODING_CONFIDENCE_THRESHOLD - 0.5  ):
+                                        if( (segment_percentw - 0.5) < 0 ):
+                                                pre_bit_encoding.append(0)
+                                        else:
+                                                pre_bit_encoding.append(1)
+                                else:
+                                        pre_bit_encoding.append(-2)
+                                        pre_bit_pass = False
+        
+        return pre_bit_encoding, pre_bit_pass
+
+
+
+def evaluateV1BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid_indx, debug_mode ):
+        decode_image = src_atleast_grys
+        decode_blur = cv.medianBlur( decode_image, 3 )
+        _,decode_thresh_bin = cv.threshold( decode_blur, 0, 255, cv.THRESH_BINARY + cv.THRESH_TRIANGLE )
+        
+        pre_bit_pass = True
+        pre_bit_encoding = []
+        segment_percentw_vec = []
+        for ii in range(0,dcdc.ENCODING_LENGTH):
+                for jj in range(0,dcdc.ENCODING_LENGTH):
+                        if( ii*dcdc.ENCODING_LENGTH + jj == cid_indx): 
+                                pre_bit_encoding.append(-1) 
+                                continue
+                        segmentSubMatrix = decode_thresh_bin[ ii*row_seg:(ii+1)*row_seg-1, jj*col_seg:(jj+1)*col_seg-1 ]/255
+                        segment_percentw = cv.sumElems(segmentSubMatrix)[0]/segment_area
+                        segment_percentw_vec.append(segment_percentw)
+
+                        if( abs(segment_percentw - 0.5) > dcdc.DECODING_CONFIDENCE_THRESHOLD - 0.5  ):
+                                if( (segment_percentw - 0.5) < 0 ):
+                                        pre_bit_encoding.append(0)
+                                else:
+                                        pre_bit_encoding.append(1)
+                        else:
+                                pre_bit_encoding.append(-2)
+                                pre_bit_pass = False
+
+
+        if( not pre_bit_pass ):
+                decode_image = src_atleast_grys
+                pre_bit_pass = True
+                pre_bit_encoding = []
+                segment_percentw_vec = []
+                _,decode_image_tzthresh = cv.threshold( 255-decode_image, 255-dcdc.DECODING_GREYSCALE_THRESH, 255, cv.THRESH_TOZERO)
+                decode_image_tzthresh = 255 - decode_image_tzthresh
+                decode_blur = cv.medianBlur( decode_image_tzthresh, 3 )
+                _,decode_thresh_bin = cv.threshold( decode_blur, 0, 255, cv.THRESH_BINARY + cv.THRESH_TRIANGLE )
+                for ii in range(0,dcdc.ENCODING_LENGTH):
+                        for jj in range(0,dcdc.ENCODING_LENGTH):
+                                if( ii*dcdc.ENCODING_LENGTH + jj == cid_indx): 
+                                        pre_bit_encoding.append(-1) 
+                                        continue
+                                segmentSubMatrix = decode_thresh_bin[ ii*row_seg:(ii+1)*row_seg-1, jj*col_seg:(jj+1)*col_seg-1 ]/255
+                                segment_percentw = cv.sumElems(segmentSubMatrix)[0]/segment_area
                                 segment_percentw_vec.append(segment_percentw)
 
                                 if( abs(segment_percentw - 0.5) > dcdc.DECODING_CONFIDENCE_THRESHOLD - 0.5  ):

@@ -14,7 +14,7 @@ def showContours( contoursi , title:str , imageref_shape ):
 
 
 
-def showContoursOnImage( contoursi, hierarchy , title:str, imageref ):
+def showContoursOnImage( contoursi , title:str, imageref ):
     drawing = imageref
     for ii in range(0,len(contoursi)): 
         color = ( int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)) )
@@ -23,7 +23,7 @@ def showContoursOnImage( contoursi, hierarchy , title:str, imageref ):
 
 
 
-def drawContoursOnImage( contoursi, hierarchy , imageref ):
+def drawContoursOnImage( contoursi , imageref ):
     drawing = imageref
     for ii in range(0,len(contoursi)): 
         color = ( int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)) )
@@ -32,7 +32,7 @@ def drawContoursOnImage( contoursi, hierarchy , imageref ):
 
 
 
-def showContoursAndCenters( contoursi, hierarchy , centers, title:str, imageref ):
+def showContoursAndCenters( contoursi , centers, title:str, imageref ):
     drawing = np.zeros( imageref.shape , dtype=np.uint8)
     for ii in range(0,len(contoursi)): 
         color = ( int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)) )
@@ -42,7 +42,7 @@ def showContoursAndCenters( contoursi, hierarchy , centers, title:str, imageref 
 
 
 
-def showContoursAndCentersOnImage( contoursi, hierarchy , centers, title:str, imageref ):
+def showContoursAndCentersOnImage( contoursi , centers, title:str, imageref ):
     drawing = imageref
     for ii in range(0,len(contoursi)): 
         color = ( int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)) )
