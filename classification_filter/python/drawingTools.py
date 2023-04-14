@@ -3,19 +3,25 @@ import random as rnd
 import cv2 as cv
 import numpy as np
 
-def showContours( contoursi, hierarchy , title, imageref ):
-    drawing = np.zeros( imageref.shape , dtype=np.uint8)
+# TODO: CLEAN THIS SECTION UP
+
+def showContours( contoursi , title:str , imageref_shape ):
+    drawing = np.zeros( imageref_shape , dtype=np.uint8)
     for ii in range(0,len(contoursi)): 
         color = ( int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)) )
         cv.drawContours( drawing, [contoursi[ii]], 0, color, 3 )
     cv.imshow( title, drawing )
 
-def showContoursOnImage( contoursi, hierarchy , title, imageref ):
+
+
+def showContoursOnImage( contoursi, hierarchy , title:str, imageref ):
     drawing = imageref
     for ii in range(0,len(contoursi)): 
         color = ( int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)) )
         cv.drawContours( drawing, [contoursi[ii]], 0, color, 3 )
     cv.imshow( title, drawing )
+
+
 
 def drawContoursOnImage( contoursi, hierarchy , imageref ):
     drawing = imageref
@@ -24,7 +30,9 @@ def drawContoursOnImage( contoursi, hierarchy , imageref ):
         cv.drawContours( drawing, [contoursi[ii]], 0, color, 3 )
     return drawing
 
-def showContoursAndCenters( contoursi, hierarchy , centers, title, imageref ):
+
+
+def showContoursAndCenters( contoursi, hierarchy , centers, title:str, imageref ):
     drawing = np.zeros( imageref.shape , dtype=np.uint8)
     for ii in range(0,len(contoursi)): 
         color = ( int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)) )
@@ -32,7 +40,9 @@ def showContoursAndCenters( contoursi, hierarchy , centers, title, imageref ):
         cv.circle( drawing, ( int(centers[ii][0]) , int(centers[ii][1]) ) , 5, color )
     cv.imshow( title, drawing ) 
 
-def showContoursAndCentersOnImage( contoursi, hierarchy , centers, title, imageref ):
+
+
+def showContoursAndCentersOnImage( contoursi, hierarchy , centers, title:str, imageref ):
     drawing = imageref
     for ii in range(0,len(contoursi)): 
         color = ( int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)) )
@@ -40,7 +50,9 @@ def showContoursAndCentersOnImage( contoursi, hierarchy , centers, title, imager
         cv.circle( drawing, ( int(centers[ii][0]) , int(centers[ii][1]) ) , 5, color )
     cv.imshow( title, drawing )  
 
-def showEncodingInformation( code, segment_length, encoding_length, title, imgref ):
+
+
+def showEncodingInformation( code, segment_length, encoding_length, title:str, imgref ):
     drawing = imgref
     red_color = (int(0),int(0),int(255))
     img_height, img_width, _ = imgref.shape

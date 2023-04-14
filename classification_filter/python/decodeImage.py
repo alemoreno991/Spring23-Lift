@@ -1,20 +1,20 @@
 import cv2 as cv
 import math
 import numpy as np
-import debugTools as dt
-import euclideanSpaceTools as est
+import drawingTools as dt
+import metrics2D as est
 import sys
 
 #// DEBUG PROPERTIES
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-DECODER_SHOWCASE_MODE = True
-DECODER_DEBUG_MODE = 0
+dcdc.DECODER_SHOWCASE_MODE = True
+dcdc.DECODER_DEBUG_MODE = 0
 #  0 - NONE
 #  1 - DEBUGGER MODE FOR D1 EXTRACTION
 #  2 - DEBUGGER MODE FOR ENCODING DETERMINATION
 #  3 - DEBUGGER MODE FOR BOTH MODES (1)(2)
-DECODER_VERBOSE_MODE = False
-DECODER_SHOWCASE_MODE = True
+dcdc.DECODER_VERBOSE_MODE = False
+dcdc.DECODER_SHOWCASE_MODE = True
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -22,45 +22,45 @@ DECODER_SHOWCASE_MODE = True
 #/// MEASURED PROPERTIES 
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #// // FOR COMPUTER GENERATED IMAGES
-# ENCODING_LENGTH 3
-# MEASURED_ASPECT_RATIO 9.615
-# ENCODING_CROP_RATIO 0.1772151899
-# SEGMENT_LCIRC_RATIO 0.7853981634
-# SEGMENT_SCIRC_RATIO 0.0872664626
+# dcdc.ENCODING_LENGTH 3
+# dcdc.MEASURED_ASPECT_RATIO 9.615
+# dcdc.ENCODING_CROP_RATIO 0.1772151899
+# dcdc.SEGMENT_LCIRC_RATIO 0.7853981634
+# dcdc.SEGMENT_SCIRC_RATIO 0.0872664626
 
 #// // FOR IRL IMAGES
-ENCODING_LENGTH = 3
-MEASURED_ASPECT_RATIO = 6.0
-ENCODING_CROP_RATIO = 0.1666666667
-SEGMENT_LCIRC_RATIO = 0.7853981634
-SEGMENT_SCIRC_RATIO = 0.0872664626
+dcdc.ENCODING_LENGTH = 3
+dcdc.MEASURED_ASPECT_RATIO = 6.0
+dcdc.ENCODING_CROP_RATIO = 0.1666666667
+dcdc.SEGMENT_LCIRC_RATIO = 0.7853981634
+dcdc.SEGMENT_SCIRC_RATIO = 0.0872664626
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
 #/// TUNING PARAMETERS
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-GREYSCALE_TO_255_THRESHOLD = 200
+dcdc.GREYSCALE_TO_255_THRESHOLD = 200
 
-RECT_AREA_PERCENT_THRESHOLD = 0.15
-RECT_ASPECT_RATIO_LOWER_PERECNT_ERROR_THRESHOLD = 20
-RECT_ASPECT_RATIO_UPPER_PERECNT_ERROR_THRESHOLD = 40
-RECT_IDENTIFIER_SIDES_LOWER_THRESHOLD = 4
-RECT_IDENTIFIER_SIDES_UPPER_THRESHOLD = 6
+dcdc.RECT_AREA_PERCENT_THRESHOLD = 0.15
+dcdc.RECT_ASPECT_RATIO_LOWER_PERECNT_ERROR_THRESHOLD = 20
+dcdc.RECT_ASPECT_RATIO_UPPER_PERECNT_ERROR_THRESHOLD = 40
+dcdc.RECT_IDENTIFIER_SIDES_LOWER_THRESHOLD = 4
+dcdc.RECT_IDENTIFIER_SIDES_UPPER_THRESHOLD = 6
 
-CONTOUR_ED_THRES = 20
+dcdc.CONTOUR_ED_THRES = 20
 
-CIRC_AREA_LOWER_PERCENT_THRESHOLD = 30
-CIRC_AREA_UPPER_PERCENT_THRESHOLD = 10
-CIRC_IDENTIFIER_SIDES_THRESHOLD = 10
+dcdc.CIRC_AREA_LOWER_PERCENT_THRESHOLD = 30
+dcdc.CIRC_AREA_UPPER_PERCENT_THRESHOLD = 10
+dcdc.CIRC_IDENTIFIER_SIDES_THRESHOLD = 10
 
-DECODING_CONFIDENCE_THRESHOLD = 0.65
-DECODING_GREYSCALE_THRESH = 150
+dcdc.DECODING_CONFIDENCE_THRESHOLD = 0.65
+dcdc.DECODING_GREYSCALE_THRESH = 150
 
 #// MORPHING PROPERTIES
-GRADIENT_MORPH_SIZE = 1
-CLOSING_MORPH_SIZE = 0
-MEDIAN_BLUR_SIZE = 1
+dcdc.GRADIENT_MORPH_SIZE = 1
+dcdc.CLOSING_MORPH_SIZE = 0
+dcdc.MEDIAN_BLUR_SIZE = 1
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 def determineWarpedImageFrom4IdBars(image, rect_contour_centroids, debug_mode):
@@ -152,11 +152,11 @@ def extractD1Domain(image, debug_mode):
         # SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - START
         img_height, img_width, _ = image.shape
         src_gray = cv.cvtColor( image, cv.COLOR_BGR2GRAY )
-        _,src_thresh_prelim = cv.threshold( 255-src_gray, 255-GREYSCALE_TO_255_THRESHOLD, 255, cv.THRESH_TOZERO )
-        src_blur = cv.medianBlur( 255-src_thresh_prelim, int( 2*MEDIAN_BLUR_SIZE+1 ) )
+        _,src_thresh_prelim = cv.threshold( 255-src_gray, 255-dcdc.GREYSCALE_TO_255_THRESHOLD, 255, cv.THRESH_TOZERO )
+        src_blur = cv.medianBlur( 255-src_thresh_prelim, int( 2*dcdc.MEDIAN_BLUR_SIZE+1 ) )
         element1 = cv.getStructuringElement( 2, \
-                                             ( int( 2*CLOSING_MORPH_SIZE+1 ), int( 2*CLOSING_MORPH_SIZE+1 ) ), \
-                                             ( int( CLOSING_MORPH_SIZE ), int( CLOSING_MORPH_SIZE ) ) \
+                                             ( int( 2*dcdc.CLOSING_MORPH_SIZE+1 ), int( 2*dcdc.CLOSING_MORPH_SIZE+1 ) ), \
+                                             ( int( dcdc.CLOSING_MORPH_SIZE ), int( dcdc.CLOSING_MORPH_SIZE ) ) \
                                            )
 
         src_eval_contours = cv.morphologyEx( src_blur, cv.MORPH_CLOSE, element1)
@@ -172,14 +172,14 @@ def extractD1Domain(image, debug_mode):
         for ii in range(0,len(contours)):
                 approx_cp = cv.approxPolyDP( contours[ii], 0.025*cv.arcLength(contours[ii],True), True )
                 approx_cp_area = abs( cv.contourArea(approx_cp) )
-                if( (    approx_cp_area > img_height * img_width * float(RECT_AREA_PERCENT_THRESHOLD)/100 ) \
-                     and len(approx_cp) >= RECT_IDENTIFIER_SIDES_LOWER_THRESHOLD \
-                     and len(approx_cp) <= RECT_IDENTIFIER_SIDES_UPPER_THRESHOLD  ):
+                if( (    approx_cp_area > img_height * img_width * float(dcdc.RECT_AREA_PERCENT_THRESHOLD)/100 ) \
+                     and len(approx_cp) >= dcdc.RECT_IDENTIFIER_SIDES_LOWER_THRESHOLD \
+                     and len(approx_cp) <= dcdc.RECT_IDENTIFIER_SIDES_UPPER_THRESHOLD  ):
                         rect_contours_pass1.append( contours[ii] )
                         _, approx_rect_size, approx_rect_angle  = cv.minAreaRect(approx_cp)
                         approx_aspectr = max( approx_rect_size[0]/approx_rect_size[1], approx_rect_size[1]/approx_rect_size[0] )
-                        if(    approx_aspectr > (1 - float(RECT_ASPECT_RATIO_LOWER_PERECNT_ERROR_THRESHOLD)/100) * MEASURED_ASPECT_RATIO 
-                           and approx_aspectr < (1 + float(RECT_ASPECT_RATIO_UPPER_PERECNT_ERROR_THRESHOLD)/100) * MEASURED_ASPECT_RATIO ):
+                        if(    approx_aspectr > (1 - float(dcdc.RECT_ASPECT_RATIO_LOWER_PERECNT_ERROR_THRESHOLD)/100) * dcdc.MEASURED_ASPECT_RATIO 
+                           and approx_aspectr < (1 + float(dcdc.RECT_ASPECT_RATIO_UPPER_PERECNT_ERROR_THRESHOLD)/100) * dcdc.MEASURED_ASPECT_RATIO ):
                                 rect_contours.append( contours[ii] )
                                 contour_moments = cv.moments( contours[ii] )
                                 contour_centroid = ( (contour_moments['m10']/contour_moments['m00']) , (contour_moments['m01']/contour_moments['m00']) )
@@ -191,12 +191,12 @@ def extractD1Domain(image, debug_mode):
 
         if(debug_mode):
                 cv.imshow( "D3 IMAGE USED TO CALCULATE CONTOURS", src_eval_contours) 
-                dt.showContours(contours,hierarchy,"CONTOURS IN D3",image)
-                dt.showContours(rect_contours_pass1,hierarchy,"CONTOURS THAT PASS EVERYTHING BUT ASPECT-RATIO",image)
+                dt.showContours(contours,"CONTOURS IN D3",image.shape)
+                dt.showContours(rect_contours_pass1,"CONTOURS THAT PASS EVERYTHING BUT ASPECT-RATIO",image.shape)
                 cv.waitKey(0)
         #  FIND LOCATING BARS - END
 
-        if(DECODER_SHOWCASE_MODE):
+        if(dcdc.DECODER_SHOWCASE_MODE):
                 dt.showContoursAndCentersOnImage(rect_contours,hierarchy,rect_contour_centroids,"PASSING CONTOURS ON IMAGE",image)
                 cv.waitKey(0)
 
@@ -207,7 +207,7 @@ def extractD1Domain(image, debug_mode):
         if( len(rect_contour_centroids) > 4 ):
                 if(debug_mode):
                         print( "[WARNING] FOUND: " + str(len(rect_contour_centroids)) + " IDENTIFING BARS" )
-                        dt.showContours(rect_contours,hierarchy,"CONTOURS THAT PASS ALL GEOMETRY TESTS",image)
+                        dt.showContours(rect_contours,"CONTOURS THAT PASS ALL GEOMETRY TESTS",image.shape)
                         cv.waitKey(0)
 
                 rect_contours_corr.append( rect_contours[0] )
@@ -217,7 +217,7 @@ def extractD1Domain(image, debug_mode):
                 for ii in range( 1, len(rect_contour_centroids) ):
                         pass_flag = True
                         for jj in range( 0, len(rect_contour_centroids_corr) ):
-                                if( est.euclideanDistance( rect_contour_centroids[ii], rect_contour_centroids_corr[jj] ) <= float(CONTOUR_ED_THRES) ):
+                                if( est.euclideanDistance( rect_contour_centroids[ii], rect_contour_centroids_corr[jj] ) <= float(dcdc.CONTOUR_ED_THRES) ):
                                         pass_flag = False 
                                         break
                         if( pass_flag ):
@@ -236,7 +236,7 @@ def extractD1Domain(image, debug_mode):
                 else:
                         if(debug_mode):
                                 print( "[DEBUG] ID BAR CORRECTION SUCCESS AS THERE ARE <4 ID-BARS: " + str(len(rect_contour_centroids))  )
-                                dt.showContours(rect_contours,hierarchy,"CONTOURS THAT PASS ALL GEOMETRY AND REDUCTION TESTS",image)
+                                dt.showContours(rect_contours,"CONTOURS THAT PASS ALL GEOMETRY AND REDUCTION TESTS",image.shape)
                                 cv.waitKey(0)
         #  PROTECTION AGAINST MORE/LESS THAN FOR 4 BARS - END
 
@@ -249,8 +249,8 @@ def extractD1Domain(image, debug_mode):
         else: 
                 return []
 
-        encodedImage = warped_image[ int(float(ENCODING_CROP_RATIO)*fc_median_distance):int((1-float(ENCODING_CROP_RATIO))*fc_median_distance), \
-                                     int(float(ENCODING_CROP_RATIO)*fc_median_distance):int((1-float(ENCODING_CROP_RATIO))*fc_median_distance) ]
+        encodedImage = warped_image[ int(float(dcdc.ENCODING_CROP_RATIO)*fc_median_distance):int((1-float(dcdc.ENCODING_CROP_RATIO))*fc_median_distance), \
+                                     int(float(dcdc.ENCODING_CROP_RATIO)*fc_median_distance):int((1-float(dcdc.ENCODING_CROP_RATIO))*fc_median_distance) ]
 
         if(debug_mode):
                 cv.imshow( "D2 CROPPED IMAGE", warped_image); 
@@ -264,12 +264,12 @@ def determineEncodingFromD1Image( image, debug_mode ):
         bit_encoding = []
         # SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - START
         img_height, img_width, _ = image.shape
-        row_seg = int(img_height/ENCODING_LENGTH)
-        col_seg = int(img_width/ENCODING_LENGTH)
-        segment_area = img_height * img_width / ( ENCODING_LENGTH * ENCODING_LENGTH )
+        row_seg = int(img_height/dcdc.ENCODING_LENGTH)
+        col_seg = int(img_width/dcdc.ENCODING_LENGTH)
+        segment_area = img_height * img_width / ( dcdc.ENCODING_LENGTH * dcdc.ENCODING_LENGTH )
 
         src_gray = cv.cvtColor( image, cv.COLOR_BGR2GRAY )
-        _,src_thresh_prelim = cv.threshold( 255-src_gray, 255-GREYSCALE_TO_255_THRESHOLD, 255, cv.THRESH_TOZERO )
+        _,src_thresh_prelim = cv.threshold( 255-src_gray, 255-dcdc.GREYSCALE_TO_255_THRESHOLD, 255, cv.THRESH_TOZERO )
         src_eval_contours = 255 - src_thresh_prelim
         #  SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - END
         
@@ -284,11 +284,11 @@ def determineEncodingFromD1Image( image, debug_mode ):
         circ_contour_centroids = []
         for ii in range(0,len(contours)):
                 approx_cp = cv.approxPolyDP( contours[ii], 0.01*cv.arcLength(contours[ii],True), True )
-                if( len(approx_cp) > CIRC_IDENTIFIER_SIDES_THRESHOLD  ):
+                if( len(approx_cp) > dcdc.CIRC_IDENTIFIER_SIDES_THRESHOLD  ):
                         approx_min_circ_center,approx_min_circ_radius = cv.minEnclosingCircle( contours[ii] )
                         approx_cp_area = math.pi * pow(approx_min_circ_radius,2)
-                        if(    approx_cp_area < ( segment_area ) * (SEGMENT_LCIRC_RATIO) * (1 + float(CIRC_AREA_UPPER_PERCENT_THRESHOLD)/100) \
-                           and approx_cp_area > ( segment_area ) * (SEGMENT_SCIRC_RATIO) * (1 - float(CIRC_AREA_LOWER_PERCENT_THRESHOLD)/100)  ):
+                        if(    approx_cp_area < ( segment_area ) * (dcdc.SEGMENT_LCIRC_RATIO) * (1 + float(dcdc.CIRC_AREA_UPPER_PERCENT_THRESHOLD)/100) \
+                           and approx_cp_area > ( segment_area ) * (dcdc.SEGMENT_SCIRC_RATIO) * (1 - float(dcdc.CIRC_AREA_LOWER_PERCENT_THRESHOLD)/100)  ):
                                 circ_contours.append( contours[ii] )
                                 circ_contour_centroids.append( approx_min_circ_center )
                                 weighted_sum_circ_centroid = ( weighted_sum_circ_centroid[0] + approx_cp_area*approx_min_circ_center[0], \
@@ -304,20 +304,20 @@ def determineEncodingFromD1Image( image, debug_mode ):
         cid_indx = int(-1) 
         encoded_src_threshed = src_eval_contours
         cidSegementSubmatrix = []
-        for ii in range(0,ENCODING_LENGTH):
+        for ii in range(0,dcdc.ENCODING_LENGTH):
                 if(cid_found):
                         break
-                for jj in range(0,ENCODING_LENGTH):
+                for jj in range(0,dcdc.ENCODING_LENGTH):
                         if(cid_found):
                                 break
                         elif( int(avg_circ_centroid[0]) >= jj*col_seg and int(avg_circ_centroid[0]) <= (jj+1)*col_seg - 1 \
                           and int(avg_circ_centroid[1]) >= ii*row_seg and int(avg_circ_centroid[1]) <= (ii+1)*row_seg - 1 ):
-                                cid_indx = ii*ENCODING_LENGTH + jj
+                                cid_indx = ii*dcdc.ENCODING_LENGTH + jj
                                 cid_found = True
                                 cidSegementSubmatrix = encoded_src_threshed[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ]
 
         if( debug_mode ):
-                dt.showContours(contours,hierarchy,"CONTOURS IN D1",image)
+                dt.showContours(contours,"CONTOURS IN D1",image.shape)
                 dt.showContoursAndCenters(circ_contours,hierarchy,circ_contour_centroids,"PASSING CIRCULAR CONTOURS IN D1 AND THEIR CENTROIDS",image)
                 cv.imshow("THRESHED IMAGE OF ENCODING", encoded_src_threshed)
                 cv.waitKey(0)
@@ -325,7 +325,7 @@ def determineEncodingFromD1Image( image, debug_mode ):
         if(not cid_found):
                 return bit_encoding
         
-        if(DECODER_SHOWCASE_MODE):
+        if(dcdc.DECODER_SHOWCASE_MODE):
                 show_image = image
                 dt.showContoursAndCentersOnImage(circ_contours,hierarchy,circ_contour_centroids,"PASSING CIRCULAR CONTOURS IN D1 AND THEIR CENTROIDS",show_image); 
                 cv.waitKey(0)
@@ -337,16 +337,16 @@ def determineEncodingFromD1Image( image, debug_mode ):
         pre_bit_pass = True
         pre_bit_encoding = []
         segment_percentw_vec = []
-        for ii in range(0,ENCODING_LENGTH):
-                for jj in range(0,ENCODING_LENGTH):
-                        if( ii*ENCODING_LENGTH + jj == cid_indx): 
+        for ii in range(0,dcdc.ENCODING_LENGTH):
+                for jj in range(0,dcdc.ENCODING_LENGTH):
+                        if( ii*dcdc.ENCODING_LENGTH + jj == cid_indx): 
                                 pre_bit_encoding.append(-1) 
                                 continue
                         segmentSubMatrix = decode_thresh_bin[ ii*row_seg:(ii+1)*row_seg-1, jj*col_seg:(jj+1)*col_seg-1 ]/255
                         segment_percentw = cv.sumElems(segmentSubMatrix)[0]/segment_area
                         segment_percentw_vec.append(segment_percentw)
 
-                        if( abs(segment_percentw - 0.5) > DECODING_CONFIDENCE_THRESHOLD - 0.5  ):
+                        if( abs(segment_percentw - 0.5) > dcdc.DECODING_CONFIDENCE_THRESHOLD - 0.5  ):
                                 if( (segment_percentw - 0.5) < 0 ):
                                         pre_bit_encoding.append(0)
                                 else:
@@ -361,20 +361,20 @@ def determineEncodingFromD1Image( image, debug_mode ):
                 pre_bit_pass = True
                 pre_bit_encoding = []
                 segment_percentw_vec = []
-                _,decode_image_tzthresh = cv.threshold( 255-decode_image, 255-DECODING_GREYSCALE_THRESH, 255, cv.THRESH_TOZERO)
+                _,decode_image_tzthresh = cv.threshold( 255-decode_image, 255-dcdc.DECODING_GREYSCALE_THRESH, 255, cv.THRESH_TOZERO)
                 decode_image_tzthresh = 255 - decode_image_tzthresh
                 decode_blur = cv.medianBlur( decode_image_tzthresh, 3 )
                 _,decode_thresh_bin = cv.threshold( decode_blur, 0, 255, cv.THRESH_BINARY + cv.THRESH_TRIANGLE )
-                for ii in range(0,ENCODING_LENGTH):
-                        for jj in range(0,ENCODING_LENGTH):
-                                if( ii*ENCODING_LENGTH + jj == cid_indx): 
+                for ii in range(0,dcdc.ENCODING_LENGTH):
+                        for jj in range(0,dcdc.ENCODING_LENGTH):
+                                if( ii*dcdc.ENCODING_LENGTH + jj == cid_indx): 
                                         pre_bit_encoding.append(-1) 
                                         continue
                                 segmentSubMatrix = decode_thresh_bin[ ii*row_seg:(ii+1)*row_seg-1, jj*col_seg:(jj+1)*col_seg-1 ]/255
                                 segment_percentw = cv.sumElems(segmentSubMatrix)[0]/segment_area
                                 segment_percentw_vec.append(segment_percentw)
 
-                                if( abs(segment_percentw - 0.5) > DECODING_CONFIDENCE_THRESHOLD - 0.5  ):
+                                if( abs(segment_percentw - 0.5) > dcdc.DECODING_CONFIDENCE_THRESHOLD - 0.5  ):
                                         if( (segment_percentw - 0.5) < 0 ):
                                                 pre_bit_encoding.append(0)
                                         else:
@@ -398,9 +398,9 @@ def determineEncodingFromD1Image( image, debug_mode ):
                         bit_encoding = [ int(pre_bit_encoding[7]),int(pre_bit_encoding[6]),int(pre_bit_encoding[5]),int(pre_bit_encoding[4]), \
                                          int(pre_bit_encoding[3]),int(pre_bit_encoding[2]),int(pre_bit_encoding[1]),int(pre_bit_encoding[0]) ]
         # DETERMINE BIT ENCODING - END
-        if(DECODER_SHOWCASE_MODE):
+        if(dcdc.DECODER_SHOWCASE_MODE):
                 show_image = image
-                dt.showEncodingInformation( pre_bit_encoding, row_seg, ENCODING_LENGTH, "DECODED MESSAGE",  show_image ) 
+                dt.showEncodingInformation( pre_bit_encoding, row_seg, dcdc.ENCODING_LENGTH, "DECODED MESSAGE",  show_image ) 
                 cv.waitKey(0)
 
         return bit_encoding
