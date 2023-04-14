@@ -95,7 +95,7 @@ def determineWarpedImageFrom4IdBars(image, rect_contour_centroids, debug_mode):
 
 
 def determineWarpedImageFrom2or3IdBars(image, rect_contour_centroids, rect_contour_angles, DEBUG_MODE):
-        # TODO: CHECK THIS
+        # TODO: DETERMINE THE ROATION ANGLE IS INCONSITENT (OFF BY 180 IN CERTAIN UNIDENTIFIED CONDITIONS)
         ref_angle = rect_contour_angles[0]
         slope = math.tan ( ref_angle * math.pi / 180.0 )
         yinter = rect_contour_centroids[0][1] - slope*rect_contour_centroids[0][0]
