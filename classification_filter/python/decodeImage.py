@@ -13,23 +13,22 @@ def extractD1Domain(image, debug_mode):
         # SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - START
         src_gray = cv.cvtColor( image, cv.COLOR_BGR2GRAY )
         _,src_thresh_prelim = cv.threshold( 255-src_gray, 255-dcdc.GREYSCALE_TO_255_THRESHOLD, 255, cv.THRESH_TOZERO )
-        # src_blur = cv.medianBlur( 255-src_thresh_prelim, int( 2*dcdc.MEDIAN_BLUR_SIZE+1 ) )
         src_blur = cv.GaussianBlur(255-src_thresh_prelim,( int( 2*dcdc.GAUSS_BLUR_MORPH_SIZE+1 ), int( 2*dcdc.GAUSS_BLUR_MORPH_SIZE+1 ) ), 0 )
         src_eval_contours = cv.medianBlur( src_blur, int( 2*dcdc.MEDIAN_BLUR_SIZE+1 ) )
+
         #  SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - END
+        if(debug_mode):
+                cv.imshow( "D3 IMAGE USED TO CALCULATE CONTOURS", src_eval_contours) 
+                cv.waitKey(0)
 
         #  FIND LOCATING BARS - START
-        rect_contours, rect_contours_pass1, rect_contour_centroids, rect_contour_angles, rect_contour_areas, poly_contour_areas = \
+        rect_contours, rect_contour_centroids, rect_contour_angles, rect_contour_areas, poly_contour_areas = \
                 dcdt.determineCandidateRectIDbars( src_eval_contours, debug_mode )
 
         if( len(rect_contour_centroids) < 2 ):
                 print("[ERROR] CLASSIFICATION FILTER FOUND LESS THAN 2 ID-BARS AND CAN NOT CONTINUE")
                 return []
 
-        if(debug_mode):
-                cv.imshow( "D3 IMAGE USED TO CALCULATE CONTOURS", src_eval_contours) 
-                dt.showContours(rect_contours_pass1,"CONTOURS THAT PASS EVERYTHING BUT ASPECT-RATIO",image.shape)
-                cv.waitKey(0)
         #  FIND LOCATING BARS - END
 
         #########################################################################################################################################

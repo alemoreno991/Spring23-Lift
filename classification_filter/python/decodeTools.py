@@ -13,10 +13,10 @@ def determineCandidateRectIDbars( src_atleast_grys, debug_mode ):
         for ii in range(0,len(contours)):
                 approx_cp = cv.approxPolyDP( contours[ii], 0.025*cv.arcLength(contours[ii],True), True )
                 approx_cp_area = abs( cv.contourArea(approx_cp) )
-                rect_contours_pass1.append( contours[ii] )
                 if( (     approx_cp_area > img_height * img_width * pow(float(dcdc.RECT_AREA_PERCENT_THRESHOLD)/100,2) ) \
                       and len(approx_cp) >= dcdc.RECT_IDENTIFIER_SIDES_LOWER_THRESHOLD \
                       and len(approx_cp) <= dcdc.RECT_IDENTIFIER_SIDES_UPPER_THRESHOLD  ):
+                        rect_contours_pass1.append( contours[ii] )
                         approx_rect_center, approx_rect_size, approx_rect_angle  = cv.minAreaRect(approx_cp)
                         approx_aspectr = max( approx_rect_size[0]/approx_rect_size[1], approx_rect_size[1]/approx_rect_size[0] )
 
@@ -33,9 +33,10 @@ def determineCandidateRectIDbars( src_atleast_grys, debug_mode ):
         
         if(debug_mode):
                 dt.showContours(contours,"CONTOURS IN D3",src_atleast_grys.shape)
+                dt.showContours(rect_contours_pass1,"CONTOURS THAT PASS EVERYTHING BUT ASPECT-RATIO",src_atleast_grys.shape)
                 cv.waitKey(0)
 
-        return rect_contours, rect_contours_pass1, rect_contour_centroids, rect_contour_angles, rect_contour_areas, poly_contour_areas
+        return rect_contours, rect_contour_centroids, rect_contour_angles, rect_contour_areas, poly_contour_areas
 
 
 
@@ -140,8 +141,16 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
                 pass_flag = True
                 
                 for jj in range( 0, len(rect_contour_centroids_corr) ):
-                        if( est.euclideanDistance( rect_contour_centroids[ii], rect_contour_centroids_corr[jj] ) <= float(dcdc.CONTOUR_ED_THRES) ):
+                        if( est.euclideanDistance( rect_contour_centroids[ii], rect_contour_centroids_corr[jj] ) \
+                             <= (dcdc.CONTOUR_EDIST_PERCENT_THRES/100) * ( image_shape[0] + image_shape[1] )/2 ):
                                 # DO A SIZE CHECK TO CHOOSE WHICH TO REPLACE 
+                                if( rect_contour_areas[ii] > rect_contour_areas_corr[jj] ):
+                                        rect_contours_corr[jj] = rect_contours[ii] 
+                                        rect_contour_centroids_corr[jj] = rect_contour_centroids[ii] 
+                                        rect_contour_angles_corr[jj] = rect_contour_angles[ii] 
+                                        rect_contour_areas_corr[jj] = rect_contour_areas[ii]  
+                                        poly_contour_areas_corr[jj] = poly_contour_areas[ii] 
+
                                 pass_flag = False 
                                 break
                 
