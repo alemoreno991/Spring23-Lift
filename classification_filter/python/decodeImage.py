@@ -14,13 +14,8 @@ def extractD1Domain(image, debug_mode):
         src_gray = cv.cvtColor( image, cv.COLOR_BGR2GRAY )
         _,src_thresh_prelim = cv.threshold( 255-src_gray, 255-dcdc.GREYSCALE_TO_255_THRESHOLD, 255, cv.THRESH_TOZERO )
         # src_blur = cv.medianBlur( 255-src_thresh_prelim, int( 2*dcdc.MEDIAN_BLUR_SIZE+1 ) )
-        src_blur = cv.GaussianBlur(255-src_thresh_prelim,(5,5),0)
-        element1 = cv.getStructuringElement( 2, \
-                                             ( int( 2*dcdc.CLOSING_MORPH_SIZE+1 ), int( 2*dcdc.CLOSING_MORPH_SIZE+1 ) ), \
-                                             ( int( dcdc.CLOSING_MORPH_SIZE ), int( dcdc.CLOSING_MORPH_SIZE ) ) \
-                                           )
-
-        src_eval_contours = cv.morphologyEx( src_blur, cv.MORPH_CLOSE, element1)
+        src_blur = cv.GaussianBlur(255-src_thresh_prelim,( int( 2*dcdc.GAUSS_BLUR_MORPH_SIZE+1 ), int( 2*dcdc.GAUSS_BLUR_MORPH_SIZE+1 ) ), 0 )
+        src_eval_contours = cv.medianBlur( src_blur, int( 2*dcdc.MEDIAN_BLUR_SIZE+1 ) )
         #  SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - END
 
         #  FIND LOCATING BARS - START

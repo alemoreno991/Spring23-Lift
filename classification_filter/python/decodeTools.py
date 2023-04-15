@@ -165,7 +165,29 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
 
 
         # 2ND PROTECTION FOR MORE THAN 4 BARS ( RECT APPROX STD METHOD ) - START
-        if( len(rect_contour_areas) > 4 and len(rect_contour_centroids) > 1 ):
+        if( len(rect_contour_centroids) > 1 ):
+
+                rect_contours_corr, rect_contour_centroids_corr, rect_contour_angles_corr, rect_contour_areas_corr, poly_contour_areas_corr = [], [], [], [], []
+                for ii in range( 0, len(rect_contour_areas) ):
+                        pass_flag = True
+                        for jj in range( 0, len(rect_contour_areas) ):
+                                relative_size_perc = rect_contour_areas[ii]/rect_contour_areas[jj]
+                                if( relative_size_perc < (dcdc.REL_RECT_SIZE_PERCENT_THRESH/100) ):
+                                        pass_flag = False
+                                        break
+
+                        if pass_flag:
+                                rect_contours_corr.append( rect_contours[ii] )
+                                rect_contour_centroids_corr.append( rect_contour_centroids[ii] )
+                                rect_contour_angles_corr.append( rect_contour_angles[ii] )
+                                rect_contour_areas_corr.append( rect_contour_areas[ii]  )
+                                poly_contour_areas_corr.append( poly_contour_areas[ii] )
+                
+                rect_contours = rect_contours_corr
+                rect_contour_centroids = rect_contour_centroids_corr
+                rect_contour_angles = rect_contour_angles_corr
+                rect_contour_areas = rect_contour_areas_corr
+                poly_contour_areas = poly_contour_areas_corr
 
                 # CUTOFF IF TOO MANY 
                 if( len(rect_contour_areas) > dcdc.RECT_CUTOFF_SIZE ):
@@ -176,6 +198,10 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
                         rect_contour_angles = [ rect_contour_angles[sorted_indx[ii]] for ii in range(0,dcdc.RECT_CUTOFF_SIZE) ]
                         rect_contour_areas = [ rect_contour_areas[sorted_indx[ii]] for ii in range(0,dcdc.RECT_CUTOFF_SIZE) ]
                         poly_contour_areas = [ poly_contour_areas[sorted_indx[ii]] for ii in range(0,dcdc.RECT_CUTOFF_SIZE) ]
+
+                if(debug_mode):
+                        dt.showContours(rect_contours,"CONTOURS AFTER TRIMMING",image_shape)
+                        cv.waitKey(0)
 
                 size_before = len(rect_contour_areas)
                 while( len(rect_contour_areas) > 4 ):
@@ -209,7 +235,7 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
 
 
         # # 3RD PROTECTION FOR MORE THAN 4 BARS ( CONTOUR TRUE STD METHOD ) - START
-        # if( len(rect_contour_areas) > 4 and len(rect_contour_centroids) > 1 ):
+        # if( len(rect_contour_centroids) > 1 ):
         #         rect_contours_corr = []
         #         rect_contour_centroids_corr = []
         #         rect_contour_angles_corr = []
