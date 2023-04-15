@@ -109,9 +109,10 @@ def determineEncodingFromD1Image( image, debug_mode ):
         if( pre_bit_pass and cid_found):
                 bit_encoding =  dcdt.readMappedEncoding( cid_indx, pre_bit_encoding )
 
+
         # DETERMINE BIT ENCODING - END
         if(dcdc.DECODER_SHOWCASE_MODE):
-                show_image = image
+                show_image = image.copy()
                 dt.showEncodingInformation( pre_bit_encoding, row_seg, dcdc.ENCODING_LENGTH, "DECODED MESSAGE",  show_image ) 
                 cv.waitKey(0)
 
@@ -144,7 +145,7 @@ def main():
         src = cv.imread(imageName)
         assert imageName is not None, "[ERROR] file could not be read, check with os.path.exists()"
         bitencoding = decodeImage(src,dcdc.DECODER_DEBUG_MODE)
-        print(bitencoding)
+        print("\nPREDICTED ENCODING:\n"+str(bitencoding)+'\n')
         
 
 if __name__ == '__main__':

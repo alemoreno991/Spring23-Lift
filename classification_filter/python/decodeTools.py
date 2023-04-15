@@ -356,7 +356,7 @@ def determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debu
                 cv.waitKey(0)
 
         if(dcdc.DECODER_SHOWCASE_MODE):
-                show_image = src_eval_contours
+                show_image = src_eval_contours.copy()
                 for ii in range(0,dcdc.ENCODING_LENGTH,2):
                         for jj in range(0,dcdc.ENCODING_LENGTH,2):
                                 indx = ii*dcdc.ENCODING_LENGTH + jj
@@ -397,13 +397,16 @@ def determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debu
 def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid_indx, cid_corner_indx, debug_mode ):
         decode_image = src_atleast_grys
         decode_blur = cv.medianBlur( decode_image, 3 )
-
-        pre_bit_pass = True
-        pre_bit_encoding = []
-        segment_percentw_vec = []
         row_sub_seg = int(row_seg/2)
         col_sub_seg = int(col_seg/2)
+        sub_segment_area = row_seg * col_seg/4
         indx0_img, indx1_img, indx2_img, indx3_img, indx4_img, indx5_img, indx6_img, indx7_img, indx8_img  = [], [], [], [], [], [], [], [], []
+
+        pre_bit_pass = True
+        enc_bit_encoding = []
+        id_bit_encoding = []
+        segment_percentw_vec = []
+        segment_id_percentw_vec = []
 
         for ii in range(0,dcdc.ENCODING_LENGTH):
                 for jj in range(0,dcdc.ENCODING_LENGTH):
@@ -411,7 +414,8 @@ def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid
                         indx = ii*dcdc.ENCODING_LENGTH + jj
 
                         if( indx == cid_indx): 
-                                pre_bit_encoding.append(-1) 
+                                enc_bit_encoding.append(-1) 
+                                id_bit_encoding.append(-1) 
                                 continue
 
                         segmentSubMatrix = decode_blur[ ii*row_seg:(ii+1)*row_seg-1, jj*col_seg:(jj+1)*col_seg-1 ]
@@ -439,26 +443,46 @@ def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid
                         sSM_thresh_bin = sSM_thresh_bin/255
 
                         segment_percentw = 0.0
+                        segment_id_percentw = 0.0
                         for kk in range(0,2):
                                 for ll in range(0,2):
+                                        segmentSubSubMatrix = sSM_thresh_bin[ kk*row_sub_seg:(kk+1)*row_sub_seg-1, ll*col_sub_seg:(ll+1)*col_sub_seg-1 ]
                                         if( kk*2 + ll != cid_corner_indx):
-                                                segmentSubSubMatrix = sSM_thresh_bin[ kk*row_sub_seg:(kk+1)*row_sub_seg-1, ll*col_sub_seg:(ll+1)*col_sub_seg-1 ]
-                                                segment_percentw = segment_percentw + cv.sumElems(segmentSubSubMatrix)[0]/(0.75*segment_area)
+                                                segment_percentw = segment_percentw + cv.sumElems(segmentSubSubMatrix)[0]/( 3*sub_segment_area )
+                                        else:
+                                                segment_id_percentw = segment_id_percentw + cv.sumElems(segmentSubSubMatrix)[0]/( sub_segment_area )
                         
-                        segment_percentw_vec.append(segment_percentw)
+                        segment_percentw_vec.append( segment_percentw )
+                        segment_id_percentw_vec.append( segment_id_percentw )
+
 
                         if( abs(segment_percentw - 0.5) > dcdc.DECODING_CONFIDENCE_THRESHOLD - 0.5  ):
                                 if( (segment_percentw - 0.5) < 0 ):
-                                        pre_bit_encoding.append(0)
+                                        enc_bit_encoding.append(0)
                                 else:
-                                        pre_bit_encoding.append(1)
+                                        enc_bit_encoding.append(1)
                         else:
-                                pre_bit_encoding.append(-2)
+                                enc_bit_encoding.append(-2)
                                 pre_bit_pass = False
 
 
+                        if( abs(segment_id_percentw - 0.5) > dcdc.DECODING_CONFIDENCE_THRESHOLD - 0.5  ):
+                                if( (segment_id_percentw - 0.5) < 0 ):
+                                        id_bit_encoding.append(0)
+                                else:
+                                        id_bit_encoding.append(1)
+                        else:
+                                id_bit_encoding.append(-2)
+                                pre_bit_pass = False
+
         if(debug_mode):
-                show_image = src_atleast_grys
+                print('[DEBUG]: ENCODING INFORMATION FOR 1ST TRIAL:')
+                print('[DEBUG]: ENCODED SEGMENT: ' + str(enc_bit_encoding) )
+                print('[DEBUG]: IDENTIFIER SEGMENT: ' + str(id_bit_encoding) )
+
+
+        if(debug_mode):
+                show_image = src_atleast_grys.copy()
                 for ii in range(0,dcdc.ENCODING_LENGTH):
                         for jj in range(0,dcdc.ENCODING_LENGTH):
                                 indx = ii*dcdc.ENCODING_LENGTH + jj
@@ -483,44 +507,140 @@ def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid
                                 elif( indx == 8 ):
                                         show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx8_img
 
-                cv.imshow("BINARIZED D1 SEGMENTS",show_image)
+                cv.imshow("TRAIL 1: BINARIZED D1 SEGMENTS",show_image)
                 cv.waitKey(0)
 
 
-        if( not pre_bit_pass ):
-                decode_image = src_atleast_grys
-                pre_bit_pass = True
-                pre_bit_encoding = []
-                segment_percentw_vec = []
-                _,decode_image_tzthresh = cv.threshold( 255-decode_image, 255-dcdc.DECODING_GREYSCALE_THRESH, 255, cv.THRESH_TOZERO)
-                decode_image_tzthresh = 255 - decode_image_tzthresh
-                decode_blur = cv.medianBlur( decode_image_tzthresh, 3 )
-                for ii in range(0,dcdc.ENCODING_LENGTH):
-                        for jj in range(0,dcdc.ENCODING_LENGTH):
-                                if( ii*dcdc.ENCODING_LENGTH + jj == cid_indx): 
-                                        pre_bit_encoding.append(-1) 
-                                        continue
-                                segmentSubMatrix = decode_blur[ ii*row_seg:(ii+1)*row_seg-1, jj*col_seg:(jj+1)*col_seg-1 ]/255
-                                _,sSM_thresh_bin = cv.threshold( segmentSubMatrix.astype(np.uint8), 0, 255, cv.THRESH_BINARY + cv.THRESH_TRIANGLE )
-                                sSM_thresh_bin = sSM_thresh_bin/255
-
-                                segment_percentw = 0.0
-                                for kk in range(0,2):
-                                        for ll in range(0,2):
-                                                if( kk*2 + ll != cid_corner_indx):
-                                                        segmentSubSubMatrix = sSM_thresh_bin[ kk*row_sub_seg:(kk+1)*row_sub_seg-1, ll*col_sub_seg:(ll+1)*col_sub_seg-1 ]
-                                                        segment_percentw = segment_percentw + cv.sumElems(segmentSubSubMatrix)[0]/(0.75*segment_area)
+        # if( not pre_bit_pass ):
+        #         decode_image = src_atleast_grys
+        #         pre_bit_pass = True
+        #         enc_bit_encoding = []
+        #         id_bit_encoding = []
+        #         segment_percentw_vec = []
+        #         segment_id_percentw_vec = []
+        #         _,decode_image_tzthresh = cv.threshold( 255-decode_image, 255-dcdc.DECODING_GREYSCALE_THRESH, 255, cv.THRESH_TOZERO)
+        #         decode_image_tzthresh = 255 - decode_image_tzthresh
+        #         decode_blur = cv.medianBlur( decode_image_tzthresh, 3 )
+        #         for ii in range(0,dcdc.ENCODING_LENGTH):
+        #                 for jj in range(0,dcdc.ENCODING_LENGTH):
+        #                         indx = ii*dcdc.ENCODING_LENGTH + jj
+        #                         if( indx == cid_indx): 
+        #                                 enc_bit_encoding.append(-1) 
+        #                                 id_bit_encoding.append(-1) 
+        #                                 continue
+        #                         segmentSubMatrix = decode_blur[ ii*row_seg:(ii+1)*row_seg-1, jj*col_seg:(jj+1)*col_seg-1 ]/255
+        #                         _,sSM_thresh_bin = cv.threshold( segmentSubMatrix.astype(np.uint8), 0, 255, cv.THRESH_BINARY + cv.THRESH_TRIANGLE )
                                 
-                                segment_percentw_vec.append(segment_percentw)
+        #                         if( indx == 0 ):
+        #                                 indx0_img = sSM_thresh_bin
+        #                         elif( indx == 1 ):
+        #                                 indx1_img = sSM_thresh_bin
+        #                         elif( indx == 2 ):
+        #                                 indx2_img = sSM_thresh_bin
+        #                         elif( indx == 3 ):
+        #                                 indx3_img = sSM_thresh_bin
+        #                         elif( indx == 4 ):
+        #                                 indx4_img = sSM_thresh_bin
+        #                         elif( indx == 5 ):
+        #                                 indx5_img = sSM_thresh_bin
+        #                         elif( indx == 6 ):
+        #                                 indx6_img = sSM_thresh_bin
+        #                         elif( indx == 7 ):
+        #                                 indx7_img = sSM_thresh_bin
+        #                         elif( indx == 8 ):
+        #                                 indx8_img = sSM_thresh_bin
 
-                                if( abs(segment_percentw - 0.5) > dcdc.DECODING_CONFIDENCE_THRESHOLD - 0.5  ):
-                                        if( (segment_percentw - 0.5) < 0 ):
-                                                pre_bit_encoding.append(0)
-                                        else:
-                                                pre_bit_encoding.append(1)
-                                else:
-                                        pre_bit_encoding.append(-2)
-                                        pre_bit_pass = False
+        #                         sSM_thresh_bin = sSM_thresh_bin/255
+
+        #                         segment_percentw = 0.0
+        #                         segment_id_percentw = 0.0
+        #                         for kk in range(0,2):
+        #                                 for ll in range(0,2):
+        #                                         segmentSubSubMatrix = sSM_thresh_bin[ kk*row_sub_seg:(kk+1)*row_sub_seg-1, ll*col_sub_seg:(ll+1)*col_sub_seg-1 ]
+        #                                         if( kk*2 + ll != cid_corner_indx):
+        #                                                 segment_percentw = segment_percentw + cv.sumElems(segmentSubSubMatrix)[0]/( 3*sub_segment_area )
+        #                                         else:
+        #                                                 segment_id_percentw = segment_id_percentw + cv.sumElems(segmentSubSubMatrix)[0]/( sub_segment_area )
+                                
+        #                         segment_percentw_vec.append( segment_percentw )
+        #                         segment_id_percentw_vec.append( segment_id_percentw )
+
+
+        #                         if( abs(segment_percentw - 0.5) > dcdc.DECODING_CONFIDENCE_THRESHOLD - 0.5  ):
+        #                                 if( (segment_percentw - 0.5) < 0 ):
+        #                                         enc_bit_encoding.append(0)
+        #                                 else:
+        #                                         enc_bit_encoding.append(1)
+        #                         else:
+        #                                 enc_bit_encoding.append(-2)
+        #                                 pre_bit_pass = False
+
+
+        #                         if( abs(segment_id_percentw - 0.5) > dcdc.DECODING_CONFIDENCE_THRESHOLD - 0.5  ):
+        #                                 if( (segment_id_percentw - 0.5) < 0 ):
+        #                                         id_bit_encoding.append(0)
+        #                                 else:
+        #                                         id_bit_encoding.append(1)
+        #                         else:
+        #                                 id_bit_encoding.append(-2)
+        #                                 pre_bit_pass = False
+
+
+        # if(debug_mode):
+        #         print('[DEBUG]: ENCODING INFORMATION FOR 2ND TRIAL:')
+        #         print('[DEBUG]: ENCODED SEGMENT: ' + str(enc_bit_encoding) )
+        #         print('[DEBUG]: IDENTIFIER SEGMENT: ' + str(id_bit_encoding) )
+
+        # if(debug_mode):
+        #         show_image = src_atleast_grys.copy()
+        #         for ii in range(0,dcdc.ENCODING_LENGTH):
+        #                 for jj in range(0,dcdc.ENCODING_LENGTH):
+        #                         indx = ii*dcdc.ENCODING_LENGTH + jj
+        #                         if( indx == cid_indx): 
+        #                                 continue
+        #                         elif( indx == 0 ):
+        #                                 show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx0_img
+        #                         elif( indx == 1 ):
+        #                                 show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx1_img
+        #                         elif( indx == 2 ):
+        #                                 show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx2_img
+        #                         elif( indx == 3 ):
+        #                                 show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx3_img
+        #                         elif( indx == 4 ):
+        #                                 show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx4_img
+        #                         elif( indx == 5 ):
+        #                                 show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx5_img
+        #                         elif( indx == 6 ):
+        #                                 show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx6_img
+        #                         elif( indx == 7 ):
+        #                                 show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx7_img
+        #                         elif( indx == 8 ):
+        #                                 show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx8_img
+
+        #         cv.imshow("TRAIL 2: BINARIZED D1 SEGMENTS",show_image)
+        #         cv.waitKey(0)
+
+
+        pre_bit_encoding = []
+        for ii in range( 0, len(enc_bit_encoding) ):
+                if( (id_bit_encoding[ii] == 0 or id_bit_encoding[ii] == 1) and (enc_bit_encoding[ii] == 0 or enc_bit_encoding[ii] == 1) ):
+                        if( enc_bit_encoding[ii] == 1 and id_bit_encoding[ii] == 0 ):
+                                pre_bit_encoding.append(1)
+                        elif( enc_bit_encoding[ii] == 0 and id_bit_encoding[ii] == 1 ):
+                                pre_bit_encoding.append(0)
+                        else:
+                                pre_bit_encoding.append(-2) 
+                                pre_bit_pass = False 
+                        
+                elif( id_bit_encoding[ii] == -1 and enc_bit_encoding[ii] == -1 ):
+                        pre_bit_encoding.append(-1)
+
+                else:
+                        pre_bit_encoding.append(-2)
+                        pre_bit_pass = False
+
+        if(debug_mode):
+                print('[DEBUG]: PREBIT ENCODING: \n             ' + str(pre_bit_encoding) )
         
         return pre_bit_encoding, pre_bit_pass
 
@@ -553,32 +673,32 @@ def evaluateV1BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid
                                 pre_bit_pass = False
 
 
-        if( not pre_bit_pass ):
-                decode_image = src_atleast_grys
-                pre_bit_pass = True
-                pre_bit_encoding = []
-                segment_percentw_vec = []
-                _,decode_image_tzthresh = cv.threshold( 255-decode_image, 255-dcdc.DECODING_GREYSCALE_THRESH, 255, cv.THRESH_TOZERO)
-                decode_image_tzthresh = 255 - decode_image_tzthresh
-                decode_blur = cv.medianBlur( decode_image_tzthresh, 3 )
-                _,decode_thresh_bin = cv.threshold( decode_blur, 0, 255, cv.THRESH_BINARY + cv.THRESH_TRIANGLE )
-                for ii in range(0,dcdc.ENCODING_LENGTH):
-                        for jj in range(0,dcdc.ENCODING_LENGTH):
-                                if( ii*dcdc.ENCODING_LENGTH + jj == cid_indx): 
-                                        pre_bit_encoding.append(-1) 
-                                        continue
-                                segmentSubMatrix = decode_thresh_bin[ ii*row_seg:(ii+1)*row_seg-1, jj*col_seg:(jj+1)*col_seg-1 ]/255
-                                segment_percentw = cv.sumElems(segmentSubMatrix)[0]/segment_area
-                                segment_percentw_vec.append(segment_percentw)
+        # if( not pre_bit_pass ):
+        #         decode_image = src_atleast_grys
+        #         pre_bit_pass = True
+        #         pre_bit_encoding = []
+        #         segment_percentw_vec = []
+        #         _,decode_image_tzthresh = cv.threshold( 255-decode_image, 255-dcdc.DECODING_GREYSCALE_THRESH, 255, cv.THRESH_TOZERO)
+        #         decode_image_tzthresh = 255 - decode_image_tzthresh
+        #         decode_blur = cv.medianBlur( decode_image_tzthresh, 3 )
+        #         _,decode_thresh_bin = cv.threshold( decode_blur, 0, 255, cv.THRESH_BINARY + cv.THRESH_TRIANGLE )
+        #         for ii in range(0,dcdc.ENCODING_LENGTH):
+        #                 for jj in range(0,dcdc.ENCODING_LENGTH):
+        #                         if( ii*dcdc.ENCODING_LENGTH + jj == cid_indx): 
+        #                                 pre_bit_encoding.append(-1) 
+        #                                 continue
+        #                         segmentSubMatrix = decode_thresh_bin[ ii*row_seg:(ii+1)*row_seg-1, jj*col_seg:(jj+1)*col_seg-1 ]/255
+        #                         segment_percentw = cv.sumElems(segmentSubMatrix)[0]/segment_area
+        #                         segment_percentw_vec.append(segment_percentw)
 
-                                if( abs(segment_percentw - 0.5) > dcdc.DECODING_CONFIDENCE_THRESHOLD - 0.5  ):
-                                        if( (segment_percentw - 0.5) < 0 ):
-                                                pre_bit_encoding.append(0)
-                                        else:
-                                                pre_bit_encoding.append(1)
-                                else:
-                                        pre_bit_encoding.append(-2)
-                                        pre_bit_pass = False
+        #                         if( abs(segment_percentw - 0.5) > dcdc.DECODING_CONFIDENCE_THRESHOLD - 0.5  ):
+        #                                 if( (segment_percentw - 0.5) < 0 ):
+        #                                         pre_bit_encoding.append(0)
+        #                                 else:
+        #                                         pre_bit_encoding.append(1)
+        #                         else:
+        #                                 pre_bit_encoding.append(-2)
+        #                                 pre_bit_pass = False
         
         return pre_bit_encoding, pre_bit_pass
 
