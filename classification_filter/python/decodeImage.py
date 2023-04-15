@@ -5,6 +5,7 @@ import decodeConst as dcdc
 import drawingTools as dt
 import metrics2D as est
 import decodeTools as dcdt
+import time
 import sys
 
 
@@ -47,7 +48,8 @@ def extractD1Domain(image, debug_mode):
                         print( "[ERROR] ID BAR CORRECTION FAILED AS THERE ARE >4 ID-BARS OR >2 ID-BARS: " + str(len(rect_contour_centroids))  )
                 return []
         else:
-                print( "[DEBUG] ID BAR CORRECTION SUCCESS AS THERE ARE <4 ID-BARS: " + str(len(rect_contour_centroids))  )
+                if(debug_mode):
+                        print( "[DEBUG] ID BAR CORRECTION SUCCESS AS THERE ARE <4 ID-BARS: " + str(len(rect_contour_centroids))  )
 
         if(dcdc.DECODER_SHOWCASE_MODE):
                 dt.showContoursAndCentersOnImage(rect_contours,rect_contour_centroids,"PASSING CONTOURS ON IMAGE",image)
@@ -142,11 +144,14 @@ def decodeImage(image, cascade_debug_mode):
 
 def main():
         imageName = str( sys.argv[1] )
+
+        start = time.time()
         src = cv.imread(imageName)
         assert imageName is not None, "[ERROR] file could not be read, check with os.path.exists()"
         bitencoding = decodeImage(src,dcdc.DECODER_DEBUG_MODE)
+
         print("\nPREDICTED ENCODING:\n"+str(bitencoding)+'\n')
-        
+        print("Process Time: " + str( round( time.time() - start, 5 )  ) + '\n')
 
 if __name__ == '__main__':
         main()

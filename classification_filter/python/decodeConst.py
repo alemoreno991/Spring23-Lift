@@ -2,8 +2,8 @@ ENCODING_VERSION = 2
 
 #// DEBUG PROPERTIES
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-DECODER_SHOWCASE_MODE = True
-DECODER_DEBUG_MODE = 3
+DECODER_SHOWCASE_MODE = False
+DECODER_DEBUG_MODE = 0
 #  0 - NONE
 #  1 - DEBUGGER MODE FOR D1 EXTRACTION
 #  2 - DEBUGGER MODE FOR ENCODING DETERMINATION
