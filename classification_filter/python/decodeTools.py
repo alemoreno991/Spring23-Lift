@@ -26,10 +26,10 @@ def determineCandidateRectIDbars( src_atleast_grys, debug_mode ):
                                 poly_contour_areas.append( approx_cp_area ) # NOT THE SAME AS THE ONE ABOVE
                                 rect_contours.append( contours[ii] )
                                 rect_contour_centroids.append(approx_rect_center)
-                                if( approx_rect_size[0] < approx_rect_size[1] ):
+                                if( approx_rect_size[0] > approx_rect_size[1] ):
                                         rect_contour_angles.append(approx_rect_angle)
                                 else:
-                                        rect_contour_angles.append( 90. - approx_rect_angle )
+                                        rect_contour_angles.append( 90. + approx_rect_angle )
         
         if(debug_mode):
                 dt.showContours(contours,"CONTOURS IN D3",src_atleast_grys.shape)
@@ -103,7 +103,7 @@ def determineWarpedImageFrom2or3IdBars(image, rect_contour_centroids, rect_conto
         above_reference_line = ( rect_contour_centroids[1][1] - (slope*rect_contour_centroids[1][0] + yinter) ) > 0
 
         fc_median_distance = 0.
-        if( abs(ref_angle - rect_contour_angles[0]) > 45.0 ):
+        if( abs(ref_angle - rect_contour_angles[0]) < 45.0 ):
                 fc_median_distance = 2 * est.euclideanDistance( rect_contour_centroids[0],rect_contour_centroids[1]) / math.sqrt(2)
         else:
                 fc_median_distance = est.euclideanDistance( rect_contour_centroids[0],rect_contour_centroids[1])
@@ -112,9 +112,9 @@ def determineWarpedImageFrom2or3IdBars(image, rect_contour_centroids, rect_conto
 
         # TODO: TEST THIS DELTA ANGLE DETERMINATION
         if(above_reference_line):
-                delta_angle = 90 - ref_angle
+                delta_angle = -ref_angle + 90
         else:
-                delta_angle = -90 - ref_angle
+                delta_angle = -ref_angle - 90
 
         img_height, img_width,_ = image.shape
         rotatedimageSize = ( int(2*img_height) , int(2*img_width)  )
