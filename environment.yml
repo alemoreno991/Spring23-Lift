@@ -3,6 +3,6 @@ dependencies:
   - python=3.9
   - pip
   - pip:
-    - -r file:./src/yolo7/requirements.txt
-    - pyrealsense2==2.53
+    - -r ./src/yolov7/requirements.txt
+    - pyrealsense2
 prefix: ./env
