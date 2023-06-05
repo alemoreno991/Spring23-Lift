@@ -1,4 +1,0 @@
-[submodule "src/yolov7"]
-	path = src/yolov7
-	branch = main
-	url = https://github.com/WongKinYiu/yolov7.git

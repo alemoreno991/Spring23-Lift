@@ -34,3 +34,7 @@ train:
 	python train.py --workers 1 --device 0 --batch-size 2 \
 	--epochs $(EPOCHS) --img $(IMG_SIZE) --data $(DATA_CONFIG) --hyp $(HYP_CONFIG) \
 	--cfg $(CFG_CONFIG) --project $(PROJ_DIR) --name $(NAME) --weights $(WEIGHTS)
+
+clean_all_containers:
+	docker rm $$(docker ps -q -a) && \
+	docker rmi utexascdus/utcdusxyolo:1.0

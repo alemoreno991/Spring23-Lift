@@ -1,8 +1,0 @@
-name: CDUS-Lift
-dependencies:
-  - python=3.9
-  - pip
-  - pip:
-    - -r ./src/yolov7/requirements.txt
-    - pyrealsense2
-prefix: ./env
