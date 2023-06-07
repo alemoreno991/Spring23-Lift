@@ -10,7 +10,7 @@ services:
     shm_size: '64g'
     container_name: utxyolo
     volumes: 
-      - ../src/yolov7:/workspace_utcdusxyolo/yolov7
+      - ../detection_nnetwork/src/yolov7:/workspace_utcdusxyolo/yolov7
     deploy:
       resources:
         reservations:
