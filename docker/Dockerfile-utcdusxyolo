@@ -1,0 +1,11 @@
+FROM nvcr.io/nvidia/pytorch:23.05-py3
+
+RUN apt update -y && \
+    apt install -y zip htop screen libgl1-mesa-glx && \
+    mkdir /workspace_utcdusxyolo
+
+WORKDIR /workspace_utcdusxyolo
+
+COPY ./requirements.txt /workspace_utcdusxyolo/requirements.txt
+
+RUN pip install -r /workspace_utcdusxyolo/requirements.txt
