@@ -1,6 +1,6 @@
-SRC_DIR := $(PWD)/src
+SRC_DIR := $(PWD)/detection_nnetwork/src
 YOLO_DIR := ${SRC_DIR}/yolov7
-CUSTOM_YOLO_DIR = $(PWD)/customize_yolo
+CUSTOM_YOLO_DIR = $(PWD)/detection_nnetwork/customize_yolo
 export PYTHONPATH := ${YOLO_DIR}
 
 # Training configuration
@@ -15,7 +15,7 @@ WEIGHTS = $(CUSTOM_YOLO_DIR)/runs/default/yolov7/weights/default/yolov7-tiny.pt
 
 # Run the program configuration 
 MAIN = main.py
-WEIGHTS_CUSTOM = $(PWD)/customize_yolo/runs/train/$(NAME)/weights/best.pt
+WEIGHTS_CUSTOM = $(PWD)/detection_nnetwork/customize_yolo/runs/train/$(NAME)/weights/best.pt
 
 run_default:
 	cd $(SRC_DIR); python $(MAIN) --conf 0.8 

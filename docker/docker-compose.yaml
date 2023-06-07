@@ -1,6 +1,25 @@
 version: "3"
 
 services:
+  
+  misc:
+    build:
+      context: ./
+      shm_size: '64g'
+      dockerfile: ./Dockerfile-utcdusxyolo
+    image: utexascdus/utcdusxyolo:1.0
+    shm_size: '64g'
+    container_name: utxyolo
+    volumes: 
+      - ../src:/workspace_utcdusxyolo/
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  
   train-data:
     build:
       context: ./
@@ -10,7 +29,7 @@ services:
     shm_size: '64g'
     container_name: utxyolo
     volumes: 
-      - ../src/detection_nnetwork/src/yolov7:/workspace_utcdusxyolo/yolov7
+      - ../src:/workspace_utcdusxyolo/
     deploy:
       resources:
         reservations:
@@ -18,3 +37,4 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    command: bash -c "make train"
