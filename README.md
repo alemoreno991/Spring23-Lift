@@ -1,11 +1,10 @@
 # [Spring23] Lift-CDUS project
 ---
-This repository implements the computer vision stack for the Lift-CDUS project.
 
-# Quick Start
+The idea is to develop the code in the corresponding branches:
 
-Download the repository and create the `conda` environment. Note that this has 
-to be done only once.
+- detector-dev
+- classifier-dev
 
 ```
 git clone --recurse-submodules REPOSITORY <local_name>
