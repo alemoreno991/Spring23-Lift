@@ -1,0 +1,20 @@
+version: "3"
+
+services:
+  train-data:
+    build:
+      context: ./
+      shm_size: '64g'
+      dockerfile: ./Dockerfile-utcdusxyolo
+    image: utexascdus/utcdusxyolo:1.0
+    shm_size: '64g'
+    container_name: utxyolo
+    volumes: 
+      - ../src/detection_nnetwork/src/yolov7:/workspace_utcdusxyolo/yolov7
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

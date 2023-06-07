@@ -1,4 +1,28 @@
-customize_yolo
+raw_data/
+doc/
+.idea/
+
+customize_yolo/*
+!customize_yolo/runs
+customize_yolo/runs/*
+
+!customize_yolo/runs/train
+customize_yolo/runs/train/*
+!customize_yolo/runs/train/yolov7-custom
+customize_yolo/runs/train/yolov7-custom/*
+!customize_yolo/runs/train/yolov7-custom/weights
+customize_yolo/runs/train/yolov7-custom/weights/*
+!customize_yolo/runs/train/yolov7-custom/weights/best.pt
+
+!customize_yolo/runs/default
+customize_yolo/runs/default/*
+!customize_yolo/runs/default/yolov7
+customize_yolo/runs/default/train/yolov7/*
+!customize_yolo/runs/default/train/yolov7/weights
+customize_yolo/runs/default/train/yolov7/weights/*
+!customize_yolo/runs/default/train/yolov7/weights/default
+customize_yolo/runs/default/train/yolov7/weights/default/*
+!customize_yolo/runs/default/train/yolov7/weights/default/yolov7.pt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -161,6 +185,5 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-
-.vscode/
-*DS_Store
+/.vscode
+.DS_Store
