@@ -198,3 +198,5 @@ last.pt
 events.out*
 **/customize_yolo/**/hyp.yaml
 **/customize_yolo/**/opt.yaml
+*.mp4
+*.png
