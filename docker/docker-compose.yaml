@@ -7,7 +7,7 @@ services:
       context: ./
       shm_size: '64g'
       dockerfile: ./Dockerfile-utcdusxyolo
-    image: utexascdus/utcdusxyolo:1.0
+    image: utexascdus/utcdusxyolo_misc:1.0
     shm_size: '64g'
     container_name: utxyolo
     volumes: 
@@ -25,7 +25,7 @@ services:
       context: ./
       shm_size: '64g'
       dockerfile: ./Dockerfile-utcdusxyolo
-    image: utexascdus/utcdusxyolo:1.0
+    image: utexascdus/utcdusxyolo_train_data:1.0
     shm_size: '64g'
     container_name: utxyolo
     volumes: 

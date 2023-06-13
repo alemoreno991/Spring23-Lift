@@ -187,3 +187,14 @@ cython_debug/
 
 /.vscode
 .DS_Store
+
+**/customize_yolo/data/test/
+**/customize_yolo/data/train/
+**/customize_yolo/data/valid/
+*.jpg
+epoch*.pt
+init.pt
+last.pt
+events.out*
+**/customize_yolo/**/hyp.yaml
+**/customize_yolo/**/opt.yaml

@@ -4,8 +4,8 @@ CUSTOM_YOLO_DIR = $(PWD)/detection_nnetwork/customize_yolo
 export PYTHONPATH := ${YOLO_DIR}
 
 # Training configuration
-EPOCHS = 500
-IMG_SIZE = 680 680
+EPOCHS = 30
+IMG_SIZE = 800 800
 PROJ_DIR = $(CUSTOM_YOLO_DIR)/runs/train
 DATA_CONFIG = $(CUSTOM_YOLO_DIR)/data/custom_data.yaml 
 HYP_CONFIG = $(YOLO_DIR)/data/hyp.scratch.custom.yaml
@@ -34,7 +34,3 @@ train:
 	python train.py --workers 1 --device 0 --batch-size 2 \
 	--epochs $(EPOCHS) --img $(IMG_SIZE) --data $(DATA_CONFIG) --hyp $(HYP_CONFIG) \
 	--cfg $(CFG_CONFIG) --project $(PROJ_DIR) --name $(NAME) --weights $(WEIGHTS)
-
-clean_all_containers:
-	docker rm $$(docker ps -q -a) && \
-	docker rmi utexascdus/utcdusxyolo:1.0

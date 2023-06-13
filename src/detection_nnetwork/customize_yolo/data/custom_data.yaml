@@ -1,7 +1,7 @@
 # train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
-train: ./train
-val: ./valid
-test: ./test
+train: ../../customize_yolo/data/train
+val: ../../customize_yolo/data/valid
+test: ../../customize_yolo/data/test
 
 # number of classes
 nc: 1
