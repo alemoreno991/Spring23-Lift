@@ -7,4 +7,4 @@ test: ../../customize_yolo/data/test
 nc: 1
 
 # class names
-names: [ 'Outter-Marker' ]
+names: [ 'Crate-marker' ]
