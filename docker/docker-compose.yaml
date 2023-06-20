@@ -27,7 +27,7 @@ services:
       dockerfile: ./Dockerfile-utcdusxyolo
     image: utexascdus/utcdusxyolo_train_data:1.0
     shm_size: '64g'
-    container_name: utxyolo_misc
+    container_name: utxyolo_train_data
     volumes: 
       - ../src:/workspace_utcdusxyolo/
     deploy:
@@ -39,14 +39,14 @@ services:
               capabilities: [gpu]
     command: bash -c "make train"
 
-  detect-video:
+  detect-item:
     build:
       context: ./
       shm_size: '64g'
       dockerfile: ./Dockerfile-utcdusxyolo
-    image: utexascdus/utcdusxyolo_detect_video:1.0
+    image: utexascdus/utcdusxyolo_detect_item:1.0
     shm_size: '64g'
-    container_name: utxyolo_misc
+    container_name: utxyolo_detect_item
     volumes: 
       - ../src:/workspace_utcdusxyolo/
     deploy:
@@ -56,4 +56,4 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-    command: bash -c "make test_on_video"
+    command: bash -c "make test_composite_on_item"

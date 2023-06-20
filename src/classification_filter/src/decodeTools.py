@@ -1,9 +1,9 @@
 import cv2 as cv
 import math
 import numpy as np
-import metrics2D as est
-import decodeConst as dcdc
-import drawingTools as dt
+from . import metrics2D as est
+from . import decodeConst as dcdc
+from . import drawingTools as dt
 
 def determineCandidateRectIDbars( src_atleast_grys, debug_mode ):
         img_height, img_width = src_atleast_grys.shape
@@ -420,25 +420,26 @@ def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid
 
                         segmentSubMatrix = decode_blur[ ii*row_seg:(ii+1)*row_seg-1, jj*col_seg:(jj+1)*col_seg-1 ]
                         _,sSM_thresh_bin = cv.threshold( segmentSubMatrix.astype(np.uint8), 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU )
-
-                        if( indx == 0 ):
-                                indx0_img = sSM_thresh_bin
-                        elif( indx == 1 ):
-                                indx1_img = sSM_thresh_bin
-                        elif( indx == 2 ):
-                                indx2_img = sSM_thresh_bin
-                        elif( indx == 3 ):
-                                indx3_img = sSM_thresh_bin
-                        elif( indx == 4 ):
-                                indx4_img = sSM_thresh_bin
-                        elif( indx == 5 ):
-                                indx5_img = sSM_thresh_bin
-                        elif( indx == 6 ):
-                                indx6_img = sSM_thresh_bin
-                        elif( indx == 7 ):
-                                indx7_img = sSM_thresh_bin
-                        elif( indx == 8 ):
-                                indx8_img = sSM_thresh_bin
+                        
+                        if(debug_mode):
+                                if( indx == 0 ):
+                                        indx0_img = sSM_thresh_bin
+                                elif( indx == 1 ):
+                                        indx1_img = sSM_thresh_bin
+                                elif( indx == 2 ):
+                                        indx2_img = sSM_thresh_bin
+                                elif( indx == 3 ):
+                                        indx3_img = sSM_thresh_bin
+                                elif( indx == 4 ):
+                                        indx4_img = sSM_thresh_bin
+                                elif( indx == 5 ):
+                                        indx5_img = sSM_thresh_bin
+                                elif( indx == 6 ):
+                                        indx6_img = sSM_thresh_bin
+                                elif( indx == 7 ):
+                                        indx7_img = sSM_thresh_bin
+                                elif( indx == 8 ):
+                                        indx8_img = sSM_thresh_bin
 
                         sSM_thresh_bin = sSM_thresh_bin/255
 
@@ -456,7 +457,7 @@ def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid
                         segment_id_percentw_vec.append( segment_id_percentw )
 
 
-                        if( abs(segment_percentw - 0.5) > dcdc.DECODING_CONFIDENCE_THRESHOLD - 0.5  ):
+                        if( abs(segment_percentw - 0.5) > dcdc.DECODING_ENC_CONFIDENCE_THRESHOLD - 0.5  ):
                                 if( (segment_percentw - 0.5) < 0 ):
                                         enc_bit_encoding.append(0)
                                 else:
@@ -466,7 +467,7 @@ def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid
                                 pre_bit_pass = False
 
 
-                        if( abs(segment_id_percentw - 0.5) > dcdc.DECODING_CONFIDENCE_THRESHOLD - 0.5  ):
+                        if( abs(segment_id_percentw - 0.5) > dcdc.DECODING_ID_CONFIDENCE_THRESHOLD - 0.5  ):
                                 if( (segment_id_percentw - 0.5) < 0 ):
                                         id_bit_encoding.append(0)
                                 else:
@@ -479,6 +480,8 @@ def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid
                 print('[DEBUG]: ENCODING INFORMATION FOR 1ST TRIAL:')
                 print('[DEBUG]: ENCODED SEGMENT: ' + str(enc_bit_encoding) )
                 print('[DEBUG]: IDENTIFIER SEGMENT: ' + str(id_bit_encoding) )
+                print('[DEBUG]: ENCODED SEGMENT PW: ' + str(segment_percentw_vec) )
+                print('[DEBUG]: IDENTIFIER SEGMENT PW: ' + str(segment_id_percentw_vec) )
 
 
         if(debug_mode):

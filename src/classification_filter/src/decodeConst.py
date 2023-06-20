@@ -56,7 +56,8 @@ CIRC_AREA_LOWER_PERCENT_THRESHOLD = 30
 CIRC_AREA_UPPER_PERCENT_THRESHOLD = 10
 CIRC_IDENTIFIER_SIDES_THRESHOLD = 10
 
-DECODING_CONFIDENCE_THRESHOLD = 0.65
+DECODING_ENC_CONFIDENCE_THRESHOLD = 0.65
+DECODING_ID_CONFIDENCE_THRESHOLD = 0.55
 # DECODING_GREYSCALE_THRESH = 150
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

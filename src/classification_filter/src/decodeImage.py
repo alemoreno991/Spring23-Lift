@@ -1,10 +1,10 @@
 import cv2 as cv
 import math
 import numpy as np
-import decodeConst as dcdc
-import drawingTools as dt
-import metrics2D as est
-import decodeTools as dcdt
+from . import decodeConst as dcdc
+from . import drawingTools as dt
+from . import metrics2D as est
+from . import decodeTools as dcdt
 import time
 import sys
 
@@ -140,6 +140,19 @@ def decodeImage(image, cascade_debug_mode):
                 return []
         else:
                 return determineEncodingFromD1Image( encodedImage, DEBUG_DENC_FLAG )
+
+
+def decodeImageSection(image, crnrs):
+        imgn = image
+        x1, y1, x2, y2 = int(crnrs[0]), int(crnrs[1]), int(crnrs[2]), int(crnrs[3])
+        image_section = imgn[y1:y2, x1:x2]
+        encodedImage = extractD1Domain( image_section, False )
+        
+        if not len(encodedImage): 
+                return []
+        else:
+                return determineEncodingFromD1Image( encodedImage, False )
+
         
 
 def main():
