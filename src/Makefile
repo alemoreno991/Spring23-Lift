@@ -10,12 +10,16 @@ PROJ_DIR = $(CUSTOM_YOLO_DIR)/runs/train
 DATA_CONFIG = $(CUSTOM_YOLO_DIR)/data/custom_data.yaml 
 HYP_CONFIG = $(YOLO_DIR)/data/hyp.scratch.custom.yaml
 CFG_CONFIG = $(CUSTOM_YOLO_DIR)/cfg/training/custom_cfg.yaml
-NAME = yolov7-tiny-custom
 WEIGHTS = $(CUSTOM_YOLO_DIR)/runs/default/yolov7/weights/default/yolov7-tiny.pt
 
 # Run the program configuration 
 MAIN = main.py
+NAME = yolov7-tiny-custom
 WEIGHTS_CUSTOM = $(PWD)/detection_nnetwork/customize_yolo/runs/train/$(NAME)/weights/best.pt
+
+TEST_ITEM = $(PWD)/test_items/videos/test06132023.mp4
+# TEST_ITEM = $(PWD)/test_items/images/test06132023.png
+
 
 run_default:
 	cd $(SRC_DIR); python $(MAIN) --conf 0.8 
@@ -23,11 +27,18 @@ run_default:
 run_custom:
 	cd $(SRC_DIR); python $(MAIN) --weights $(WEIGHTS_CUSTOM)
 
-test_on_video:
+test_on_item:
 	cd $(YOLO_DIR) && \
-	python detect.py --weights $(WEIGHTS_CUSTOM) \
-		--source $(PWD)/Pickle_skydio_abridged_720.mp4 \
+	python3 detect.py --weights $(WEIGHTS_CUSTOM) \
+		--source $(TEST_ITEM) \
+		--conf 0.75 \
 		--project $(CUSTOM_YOLO_DIR)/runs/detect
+
+test_composite_on_item:
+	python3 detectc.py --weights $(WEIGHTS_CUSTOM) \
+		--source $(TEST_ITEM) \
+		--conf 0.75 \
+		--project $(CUSTOM_YOLO_DIR)/runs/detectc
 
 train:
 	cd $(YOLO_DIR) && \
