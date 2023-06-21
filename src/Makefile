@@ -17,8 +17,9 @@ MAIN = main.py
 NAME = yolov7-tiny-custom
 WEIGHTS_CUSTOM = $(PWD)/detection_nnetwork/customize_yolo/runs/train/$(NAME)/weights/best.pt
 
-# TEST_VIDEO = $(PWD)/test_items/videos/test06132023.mp4
-TEST_ITEM = $(PWD)/test_items/images/test06132023.png
+TEST_ITEM = $(PWD)/test_items/videos/test06132023.mp4
+# TEST_ITEM = $(PWD)/test_items/images/test06132023.png
+
 
 run_default:
 	cd $(SRC_DIR); python $(MAIN) --conf 0.8 
@@ -37,7 +38,7 @@ test_composite_on_item:
 	python3 detectc.py --weights $(WEIGHTS_CUSTOM) \
 		--source $(TEST_ITEM) \
 		--conf 0.75 \
-		--project $(CUSTOM_YOLO_DIR)/runs/detect
+		--project $(CUSTOM_YOLO_DIR)/runs/detectc
 
 train:
 	cd $(YOLO_DIR) && \

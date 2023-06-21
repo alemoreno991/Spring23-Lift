@@ -9,14 +9,14 @@ from numpy import random
 
 from detection_nnetwork.src.yolov7.models.experimental import attempt_load
 from detection_nnetwork.src.yolov7.utils.datasets import LoadStreams, LoadImages
-from detection_nnetwork.src.yolov7.utils.general import check_img_size, check_requirements, check_imshow, non_max_suppression, apply_classifier, \
+from detection_nnetwork.src.yolov7.utils.general import check_img_size, check_requirements, check_imshow, non_max_suppression, \
     scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path
 from detection_nnetwork.src.yolov7.utils.plots import plot_one_box
-from detection_nnetwork.src.yolov7.utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
+from detection_nnetwork.src.yolov7.utils.torch_utils import select_device, time_synchronized, TracedModel
 import classification_filter.src.decodeImage as cfilter
 
 
-def detect(save_img=False):
+def detectc(save_img=False):
     source, weights, view_img, save_txt, imgsz, trace = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size, not opt.no_trace
     save_img = not opt.nosave and not source.endswith('.txt')  # save inference images
     webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
@@ -41,12 +41,6 @@ def detect(save_img=False):
 
     if half:
         model.half()  # to FP16
-
-    # Second-stage classifier
-    classify = False
-    if classify:
-        modelc = load_classifier(name='resnet101', n=2)  # initialize
-        modelc.load_state_dict(torch.load('weights/resnet101.pt', map_location=device)['model']).to(device).eval()
 
     # Set Dataloader
     vid_path, vid_writer = None, None
@@ -93,10 +87,6 @@ def detect(save_img=False):
         pred = non_max_suppression(pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
         t3 = time_synchronized()
 
-        # Apply Classifier
-        if classify:
-            pred = apply_classifier(pred, modelc, img, im0s)
-
         # Process detections
         for i, det in enumerate(pred):  # detections per image
             if webcam:  # batch_size >= 1
@@ -121,12 +111,6 @@ def detect(save_img=False):
                 for *xyxy, conf, cls in reversed(det):
 
                     read_code = cfilter.decodeImageSection(im0,xyxy)
-                    print(read_code)
-                    read_code_str = ''
-                    if len(read_code) == 0:
-                        read_code_str = 'N/A'
-                    else:
-                        read_code_str = ''.join( str(elm) for elm in read_code )
 
                     if save_txt:  # Write to file
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
@@ -135,8 +119,13 @@ def detect(save_img=False):
                             f.write(('%g ' * len(line)).rstrip() % line + '\n')
 
                     if save_img or view_img:  # Add bbox to image
-                        label = f'{names[int(cls)]} {conf:.2f} -> ({read_code_str})'
-                        plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=1)
+                        read_code_str = ''
+                        if len(read_code) == 0:
+                            read_code_str = '(N/A)'
+                        else:
+                            read_code_str = ''.join( str(elm) for elm in read_code )
+                        label = f'Crate #{read_code_str} ({conf:.2f})'
+                        plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
 
             # Print time (inference + NMS)
             print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
@@ -189,7 +178,7 @@ if __name__ == '__main__':
     parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
     parser.add_argument('--augment', action='store_true', help='augmented inference')
     parser.add_argument('--update', action='store_true', help='update all models')
-    parser.add_argument('--project', default='runs/detect', help='save results to project/name')
+    parser.add_argument('--project', default='runs/detectc', help='save results to project/name')
     parser.add_argument('--name', default='exp', help='save results to project/name')
     parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
     parser.add_argument('--no-trace', action='store_true', help='don`t trace model')
@@ -200,7 +189,7 @@ if __name__ == '__main__':
     with torch.no_grad():
         if opt.update:  # update all models (to fix SourceChangeWarning)
             for opt.weights in ['yolov7.pt']:
-                detect()
+                detectc()
                 strip_optimizer(opt.weights)
         else:
-            detect()
+            detectc()
