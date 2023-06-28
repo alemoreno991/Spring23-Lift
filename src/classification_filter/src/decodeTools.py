@@ -91,7 +91,7 @@ def determineWarpedImageFrom4IdBars(image, rect_contour_centroids, debug_mode):
         transformationMat = cv.getPerspectiveTransform(ordered_centroids, perspective_transformed_centroids)
         warped_image = cv.warpPerspective(image, transformationMat, (int(fc_median_distance), int(fc_median_distance)))
         
-        return warped_image,fc_median_distance
+        return warped_image,fc_median_distance, transformationMat
 
 
 
@@ -168,12 +168,177 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
         rect_contour_areas = rect_contour_areas_corr
         poly_contour_areas = poly_contour_areas_corr
         if(debug_mode):
-                        dt.showContours(rect_contours,"CONTOURS AFTER FIRST PROTECTION",image_shape)
+                        dt.showContoursAndAreas(rect_contours,"PASSED FIRST PROTECTION",image_shape)
                         cv.waitKey(0)
         # 1ST PROTECTION FOR MORE THAN 4 BARS (CENTROID PROXIMITY) - END
 
+############################################################################## ELIMINATE SMALL CONTOURS - START
 
-        # 2ND PROTECTION FOR MORE THAN 4 BARS ( RECT APPROX STD METHOD ) - START
+        rect_contours_corr, rect_contour_centroids_corr, rect_contour_angles_corr, rect_contour_areas_corr, poly_contour_areas_corr = [], [], [], [], []
+
+        for ii in range( 0, len(rect_contours) ):
+
+                if rect_contour_areas[ii] > ((image_shape[0] * image_shape[1]) * float((dcdc.RECT_MINIMUM_SCREEN_PERCENTAGE/100))):
+                        rect_contours_corr.append( rect_contours[ii] )
+                        rect_contour_centroids_corr.append( rect_contour_centroids[ii] )
+                        rect_contour_angles_corr.append( rect_contour_angles[ii] )
+                        rect_contour_areas_corr.append( rect_contour_areas[ii]  )
+                        poly_contour_areas_corr.append( poly_contour_areas[ii] )
+
+        rect_contours = rect_contours_corr
+        rect_contour_centroids = rect_contour_centroids_corr
+        rect_contour_angles = rect_contour_angles_corr
+        rect_contour_areas = rect_contour_areas_corr
+        poly_contour_areas = poly_contour_areas_corr
+
+        if(debug_mode):
+                dt.showContoursAndAreas(rect_contours,"PASSED SECOND PROTECTION",image_shape)
+                cv.waitKey(0)
+
+############################################################################## BOUNDING BOX AREA/CONTOUR AREA RATIO TEST - START
+
+        rect_contours_corr, rect_contour_centroids_corr, rect_contour_angles_corr, rect_contour_areas_corr, poly_contour_areas_corr = [], [], [], [], []
+        rect_contours_recovery, rect_contour_centroids_recovery, rect_contour_angles_recovery, rect_contour_areas_recovery, poly_contour_areas_recovery = [], [], [], [], []
+        for ii in range(0,len(rect_contours)):
+                contour_area_ratio = poly_contour_areas[ii]/rect_contour_areas[ii] ##IDEALLY = 1
+                if ((contour_area_ratio < 1 + (float(dcdc.RECT_BOUNDING_CONTOUR_AREA_THRESHOLD)/100)) 
+                and (contour_area_ratio > 1 - (float(dcdc.RECT_BOUNDING_CONTOUR_AREA_THRESHOLD)/100))):
+                        rect_contours_corr.append( rect_contours[ii] )
+                        rect_contour_centroids_corr.append( rect_contour_centroids[ii] )
+                        rect_contour_angles_corr.append( rect_contour_angles[ii] )
+                        rect_contour_areas_corr.append( rect_contour_areas[ii]  )
+                        poly_contour_areas_corr.append( poly_contour_areas[ii] )
+                else:
+                        rect_contours_recovery.append( rect_contours[ii] )
+                        rect_contour_centroids_recovery.append( rect_contour_centroids[ii] )
+                        rect_contour_angles_recovery.append( rect_contour_angles[ii] )
+                        rect_contour_areas_recovery.append( rect_contour_areas[ii]  )
+                        poly_contour_areas_recovery.append( poly_contour_areas[ii] )   
+
+        rect_contours = rect_contours_corr
+        rect_contour_centroids = rect_contour_centroids_corr
+        rect_contour_angles = rect_contour_angles_corr
+        rect_contour_areas = rect_contour_areas_corr
+        poly_contour_areas = poly_contour_areas_corr
+
+        if debug_mode:
+                if len(rect_contours) == 4:
+                        print("[DEBUG] 4 MARKERS DETECTED AT SECOND PROTECTION. EXITING BAR CORRECTIONS")
+
+                dt.showContoursAndAreas(rect_contours,"PASSED THIRD PROTECTION",image_shape)
+                cv.waitKey(0)
+                
+
+        if len(rect_contours) == 4 or len(rect_contours_recovery) == 0:
+                return rect_contours , rect_contour_centroids, rect_contour_angles , rect_contour_areas , poly_contour_areas
+
+
+        # BOUNDING BOX AREA/CONTOUR AREA RATIO TEST  - END
+
+############################################################################## CONTOUR RECOVERY - START
+
+        ###################################################################### RELEVANT BOUNDING BOX AREA  - START
+
+        rect_contours_recovery2, rect_contour_centroids_recovery2, rect_contour_angles_recovery2, rect_contour_areas_recovery2, poly_contour_areas_recovery2 = [], [], [], [], []
+
+        #SET UPPER AND LOWER THREHSOLDS
+        poly_lowest_perim = cv.arcLength(rect_contours[0],True)
+        poly_highest_perim = cv.arcLength(rect_contours[0],True)
+        rect_lowest_area = rect_contour_areas[0]
+        rect_highest_area = rect_contour_areas[0]
+
+        for ii in range(0,len(rect_contours)):
+                if(cv.arcLength(rect_contours[ii],True) < poly_lowest_perim):
+                        poly_lowest_perim = cv.arcLength(rect_contours[ii],True)
+                else:
+                        poly_highest_perim = cv.arcLength(rect_contours[ii],True)
+                if(rect_contour_areas[ii] < rect_lowest_area):
+                        rect_lowest_area = rect_contour_areas[ii]
+                else:
+                        rect_highest_area = rect_contour_areas[ii]
+
+        for ii in range(0,len(rect_contours_recovery)):
+                if (rect_contour_areas_recovery[ii] <= rect_highest_area * (1 + float((dcdc.RECT_UPPER_COMPARISON_PERCENT_ERROR_THRESHOLD)/100)) 
+                and rect_contour_areas_recovery[ii] >= rect_lowest_area * (1 - float((dcdc.RECT_LOWER_COMPARISON_PERCENT_ERROR_THRESHOLD)/100))):
+                        rect_contours_recovery2.append( rect_contours_recovery[ii] )
+                        rect_contour_centroids_recovery2.append( rect_contour_centroids_recovery[ii] )
+                        rect_contour_angles_recovery2.append( rect_contour_angles_recovery[ii] )
+                        rect_contour_areas_recovery2.append( rect_contour_areas_recovery[ii]  )
+                        poly_contour_areas_recovery2.append( poly_contour_areas_recovery[ii] ) 
+
+        if(debug_mode):
+                dt.showContoursAndAreas(rect_contours_recovery2,"PASSED FIRST RECOVERY TEST",image_shape)
+                cv.waitKey(0)
+                
+        # RELE BOUNDARY BOX AREA COMPARISON - END
+
+        ######################################################################  RELEVANT CONTOUR PERIMETER - START
+
+        rect_contours_recovery3, rect_contour_centroids_recovery3, rect_contour_angles_recovery3, rect_contour_areas_recovery3, poly_contour_areas_recovery3 = [], [], [], [], []
+
+        if len(rect_contours_recovery2) > 0:
+
+                rect_perim_avg = 0
+                rect_perim_total = 0
+                for ii in range(0,len(rect_contours)):
+                        rect_perim_total = rect_perim_total + cv.arcLength(rect_contours[ii],True)
+                rect_perim_avg = rect_perim_total / len(rect_contours)
+
+                for ii in range(0,len(rect_contours_recovery2)):
+                        poly_perim_fail2 = cv.arcLength(rect_contours_recovery2[ii],True)
+                        # RECTANGLES ARE OFTEN OVERESTIMATED SO WE ONLY SET LOWER BOUND
+                        if ( poly_perim_fail2 >= poly_lowest_perim * (1 - float((dcdc.RECT_LOWER_COMPARISON_PERCENT_ERROR_THRESHOLD)/100))):
+                                rect_contours_recovery3.append( rect_contours_recovery2[ii] )
+                                rect_contour_centroids_recovery3.append( rect_contour_centroids_recovery2[ii] )
+                                rect_contour_angles_recovery3.append( rect_contour_angles_recovery2[ii] )
+                                rect_contour_areas_recovery3.append( rect_contour_areas_recovery2[ii]  )
+                                poly_contour_areas_recovery3.append( poly_contour_areas_recovery2[ii] ) 
+                
+                if(debug_mode):
+                        dt.showContoursAndPerimeters(rect_contours_recovery3,"PASSED SECOND RECOVERY TEST",image_shape)
+                        cv.waitKey(0)
+                
+
+
+        # CONTOUR PERIMETER COMPARISON - END
+
+        ###################################################################### DISTANCE FROM MARKER CENTROID TEST - START
+        #TODO ASPECT RATIO FOR ANGLES TO ENSURE IT ISNT FLIPPED
+        if len(rect_contours_recovery3) > 0:
+                marker_centroid = findMarkerCentroid(rect_contour_centroids, rect_contour_angles, debug_mode)
+                if len(rect_contours) == 3:
+                        avg_dist_from_centroid, avg_dist_x, avg_dist_y, dist_total = 0,0,0,0
+                        #FIND AVG DISTANCE TO MARKER CENTROID
+                        for ii in range(0,len(rect_contours)):
+                                dist_total = dist_total + est.euclideanDistance(rect_contour_centroids[ii] , marker_centroid)
+                        avg_dist_from_centroid_avg = dist_total / len(rect_contours)
+                        #IF DISTANCE OF RECOVERY CONTOUR IS TOO LARGE THEN ELIMINATE IT
+                        for ii in range(0,len(rect_contours_recovery3)):
+                                if est.euclideanDistance(rect_contour_centroids_recovery3[ii],marker_centroid) <  avg_dist_from_centroid_avg * (1 + float(dcdc.RECT_CENTROID_DISTANCE_THRESHOLD/100)):
+                                        rect_contours.append( rect_contours_recovery3[ii] )
+                                        rect_contour_centroids.append( rect_contour_centroids_recovery3[ii] )
+                                        rect_contour_angles.append( rect_contour_angles_recovery3[ii] )
+                                        rect_contour_areas.append( rect_contour_areas_recovery3[ii]  )
+                                        poly_contour_areas.append( poly_contour_areas_recovery3[ii] ) 
+                if len(rect_contours) == 2:   
+                                #DISTANCE TEST FROM MARKER CENTER
+                                avg_dist_from_centroid = (est.euclideanDistance(rect_contour_centroids[0],marker_centroid) + est.euclideanDistance(rect_contour_centroids[1],marker_centroid)) / 2
+                                for ii in range(0,len(rect_contours_recovery3)):
+                                        if est.euclideanDistance(rect_contour_centroids_recovery3[ii],marker_centroid) <=  (avg_dist_from_centroid * (1 + float(dcdc.RECT_CENTROID_DISTANCE_THRESHOLD/100))):
+                                                rect_contours.append( rect_contours_recovery3[ii] )
+                                                rect_contour_centroids.append( rect_contour_centroids_recovery3[ii] )
+                                                rect_contour_angles.append( rect_contour_angles_recovery3[ii] )
+                                                rect_contour_areas.append( rect_contour_areas_recovery3[ii]  )
+                                                poly_contour_areas.append( poly_contour_areas_recovery3[ii] )
+         
+        if(debug_mode):
+                dt.showContours(rect_contours,"AFTER RECOVERY",image_shape)
+                cv.waitKey(0)
+
+        # CENTROID GEOMETRY TEST - END
+
+
+        # FINAL PROTECTION FOR MORE THAN 4 BARS ( RECT APPROX STD METHOD ) - START
         if( len(rect_contour_centroids) > 1 ):
 
                 rect_contours_corr, rect_contour_centroids_corr, rect_contour_angles_corr, rect_contour_areas_corr, poly_contour_areas_corr = [], [], [], [], []
@@ -238,7 +403,7 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
                                 size_before = len(rect_contour_areas) 
 
                 if(debug_mode):
-                        dt.showContours(rect_contours,"CONTOURS AFTER SECOND PROTECTION",image_shape)
+                        dt.showContours(rect_contours,"CONTOURS AFTER FINAL PROTECTION",image_shape)
                         cv.waitKey(0)
         # 2ND PROTECTION FOR MORE THAN 4 BARS ( RECT APPROX STD METHOD ) - END
 
@@ -723,3 +888,121 @@ def readMappedEncoding( cid_indx, pre_bit_encoding ):
                                         int(pre_bit_encoding[3]),int(pre_bit_encoding[2]),int(pre_bit_encoding[1]),int(pre_bit_encoding[0]) ]
         
         return bit_encoding
+
+def determinePoseFrom4IDBars(transformation_mat, fc_median_distance, circle_indx):
+        ## TODO IMPROVE CIRCLE INDEX DETERMINATION
+
+        inv_perspective_matrix = np.linalg.inv(transformation_mat)
+        cartesian_points = []
+        # ARRANGE POINTS IN ORDER TL TR BR BL
+        
+        if circle_indx == 0: 
+                homogeneous_points = [np.array([0, 0, 1]), \
+                              np.array([fc_median_distance,0,1]), \
+                              np.array([fc_median_distance,fc_median_distance,1]), \
+                              np.array([0,fc_median_distance,1])]
+        elif circle_indx == 1:
+                homogeneous_points = [np.array([fc_median_distance,0,1]), \
+                              np.array([fc_median_distance,fc_median_distance,1]), \
+                              np.array([0,fc_median_distance,1]), \
+                              np.array([0,0,1])]
+        elif circle_indx == 2:
+                homogeneous_points = [np.array([0,fc_median_distance,1]), \
+                              np.array([0,0,1]), \
+                              np.array([fc_median_distance,0,1]), \
+                              np.array([fc_median_distance,fc_median_distance,1])]
+        elif circle_indx == 3:
+                homogeneous_points = [np.array([fc_median_distance,fc_median_distance,1]), \
+                              np.array([0,fc_median_distance,1]), \
+                              np.array([0,0,1]), \
+                              np.array([fc_median_distance,0,1])]
+
+        # TRANSFORMATION 2D WARPED -> 2D UNWARPED  
+        for ii in range(0,4):
+                # 2D WARPED (HOMOGENEOUS) -> 2D UNWARPED (HOMOGENOUS)
+                homogeneous_point = np.dot(inv_perspective_matrix, homogeneous_points[ii])
+                # HOMOGENEOUS -> CARTESIAN
+                cartesian_point = (homogeneous_point[0] / homogeneous_point[2], homogeneous_point[1]/ homogeneous_point[2])
+                cartesian_points.append(cartesian_point)
+        
+        # SOLVING TVEC AND RVEC
+        object_points = np.array(   [   [-fc_median_distance, fc_median_distance, 0], \
+                                        [fc_median_distance, fc_median_distance, 0], \
+                                        [fc_median_distance, -fc_median_distance, 0], \
+                                        [-fc_median_distance, -fc_median_distance, 0]    ],\
+                                        dtype = "float32")
+        camera_points = np.array([[cartesian_points[0][0], cartesian_points[0][1]],
+                          [cartesian_points[1][0], cartesian_points[1][1]],
+                          [cartesian_points[2][0], cartesian_points[2][1]],
+                          [cartesian_points[3][0], cartesian_points[3][1]]],
+                         dtype="float32")
+        _, rvec, tvec = cv.solvePnP(object_points, camera_points, dcdc.CAMERA_MATRIX, dcdc.DISTANCE_COEFFICIENTS)
+
+        return rvec, tvec
+
+
+def findMarkerCentroid(rect_contour_centroids, rect_contour_angles, debug_mode):
+        if len(rect_contour_centroids) == 4:
+                avg_x, avg_y, total_x, total_y,  = 0,0,0,0
+                #FIND CENTROID AVG
+                for ii in range(0,len(rect_contour_centroids)):
+                        total_x += rect_contour_centroids[ii][0] 
+                        total_y += rect_contour_centroids[ii][1] 
+                avg_x = total_x / len(rect_contour_centroids)
+                avg_y = total_y / len(rect_contour_centroids)
+                return (avg_x,avg_y)
+        elif len(rect_contour_centroids) == 3 or len(rect_contour_centroids) == 2:
+                parallel_flag = False
+                angles = []
+                #ONLY TWO CONTOURS ARE NEEDED
+                for ii in range(0, 2):
+                #CONVERT INTO POSITIVE ANGLE THAT IS LESS THAN 180 DEGREES 
+                        if (rect_contour_angles[0]*rect_contour_angles[1]) < 0:
+                                for jj in range(0,2):
+                                        if rect_contour_angles[jj] < 0:
+                                                rect_contour_angles[jj] += 360
+                                                if rect_contour_angles[jj] >=180:
+                                                        angles.append(rect_contour_angles[jj] - 180)
+                                                else:
+                                                        angles.append(rect_contour_angles[jj])
+                                        else:
+                                                if rect_contour_angles[jj] >=180:
+                                                        angles.append(rect_contour_angles[jj] - 180)
+                                                else:
+                                                        angles.append(rect_contour_angles[jj])
+                                #Negate the angle if over 180
+                                for ii in range (0,len(rect_contour_angles)):
+                                        if rect_contour_angles[ii] >= 180:
+                                                rect_contour_angles[ii] -= 180
+                        else:
+                                for jj in range(0,2):
+                                        if rect_contour_angles[jj] >=180:
+                                                angles.append(rect_contour_angles[jj] - 180)
+                                        else:
+                                                angles.append(rect_contour_angles[jj])
+                
+                difference = abs(angles[0]-angles[1])
+                #IF DIFFERENCE IS CLOSE TO 180 OR CLOSE TO 0 THEN PASS
+                if (difference <= dcdc.RECT_PARALLEL_ANGLE_THRESH or difference > 180 - dcdc.RECT_PARALLEL_ANGLE_THRESH): 
+                        return  ((rect_contour_centroids[0][0]+rect_contour_centroids[1][0])/2,
+                                        (rect_contour_centroids[0][1]+rect_contour_centroids[1][1])/2)
+                else:
+                        slopes = []
+                        y_intercepts = []
+                        # y = mx + b
+                        for angle in rect_contour_angles:
+                                #PERPENDICULAR SLOPE
+                                angle += 90
+                                slopes.append(math.tan(math.radians(angle)))
+                        for ii in range(0,len(slopes)):
+                                #  y-mx = b
+                                y_intercepts.append(rect_contour_centroids[ii][1] - (slopes[ii] * rect_contour_centroids[ii][0]))
+                        # m1x1 + b1 = m2x2 + b2
+                        # m1x1 - m2x2 = b2- b1
+                        # x1(m1-m2) = b2 - b1
+                        # x1 = b2-b1 / m1-m2
+                        y_int_difference = y_intercepts[1] - y_intercepts[0]
+                        slope_difference = slopes[0] - slopes[1]
+                        x_intersection = y_int_difference / slope_difference
+                        return (int(x_intersection), int((slopes[0]*x_intersection) + y_intercepts[0]))
+

@@ -8,7 +8,7 @@ from . import decodeTools as dcdt
 import time
 import sys
 
-
+# TODO ADD CHECK FOR WHEN ID TOO MANY OR TOO LITTLE BARS WERE FOUND
 def extractD1Domain(image, debug_mode):
 
         # SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - START
@@ -28,7 +28,7 @@ def extractD1Domain(image, debug_mode):
 
         if( len(rect_contour_centroids) < 2 ):
                 print("[ERROR] CLASSIFICATION FILTER FOUND LESS THAN 2 ID-BARS AND CAN NOT CONTINUE")
-                return []
+                return [],[],[]
 
         #  FIND LOCATING BARS - END
 
@@ -46,7 +46,7 @@ def extractD1Domain(image, debug_mode):
         if( len(rect_contour_centroids) > 4 or len(rect_contour_centroids) < 2 ):
                 if(debug_mode):
                         print( "[ERROR] ID BAR CORRECTION FAILED AS THERE ARE >4 ID-BARS OR >2 ID-BARS: " + str(len(rect_contour_centroids))  )
-                return []
+                return [],[],[]
         else:
                 if(debug_mode):
                         print( "[DEBUG] ID BAR CORRECTION SUCCESS AS THERE ARE <4 ID-BARS: " + str(len(rect_contour_centroids))  )
@@ -61,25 +61,47 @@ def extractD1Domain(image, debug_mode):
         warped_image = []
         fc_median_distance = 0.
         if( len(rect_contour_centroids) == 4 ):
-                warped_image,fc_median_distance = dcdt.determineWarpedImageFrom4IdBars( image, rect_contour_centroids, debug_mode )
+                warped_image,fc_median_distance,transformation_mat = dcdt.determineWarpedImageFrom4IdBars( image, rect_contour_centroids, debug_mode )
+               
+                
         elif( len(rect_contour_centroids) < 4 and len(rect_contour_centroids) > 1):
                 warped_image,fc_median_distance = dcdt.determineWarpedImageFrom2or3IdBars( image, rect_contour_centroids, rect_contour_angles, debug_mode)
         else: 
-                return []
-
+                return [],[],[]
+        
+        encodedImage = []
         encodedImage = warped_image[ int(float(dcdc.ENCODING_CROP_RATIO)*fc_median_distance):int((1-float(dcdc.ENCODING_CROP_RATIO))*fc_median_distance), \
                                      int(float(dcdc.ENCODING_CROP_RATIO)*fc_median_distance):int((1-float(dcdc.ENCODING_CROP_RATIO))*fc_median_distance) ]
+        
+        ######################################################################################################################################### POSE DETERMINATION - START
+        if( len(rect_contour_centroids) == 4 ):
+                # SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - START
+                img_height, img_width, _ = encodedImage.shape
+                row_seg = int(img_height/dcdc.ENCODING_LENGTH)
+                col_seg = int(img_width/dcdc.ENCODING_LENGTH)
+                segment_area = img_height * img_width / ( dcdc.ENCODING_LENGTH * dcdc.ENCODING_LENGTH )
+                #  SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - END  
+                cid_corner_indx, cid_indx, cid_found = dcdt.determineCIDIndices( encodedImage, row_seg, col_seg, segment_area, debug_mode )
+                if cid_found:
+                        rvec, tvec = dcdt.determinePoseFrom4IDBars(transformation_mat, fc_median_distance, cid_corner_indx)
+                        if debug_mode:  
+                                dt.showAxesOnImage(rvec, tvec, dcdc.CAMERA_MATRIX, dcdc.DISTANCE_COEFFICIENTS, "Axes", image)
+                                cv.waitKey(0)
+        elif( len(rect_contour_centroids) < 4 and len(rect_contour_centroids) > 1):
+                rvec, tvec = [],[]
+        ######################################################################################################################################### POSE DETERMINATION - END
+
 
         if(debug_mode):
                 cv.imshow( "D2 CROPPED IMAGE", warped_image); 
                 cv.imshow( "D1 ENCODED IMAGE", encodedImage); 
                 cv.waitKey(); 
-        
-        return encodedImage
+        return encodedImage, rvec, tvec
 
 
 
 def determineEncodingFromD1Image( image, debug_mode ):
+       
         # SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - START
         img_height, img_width, _ = image.shape
         row_seg = int(img_height/dcdc.ENCODING_LENGTH)
@@ -92,7 +114,9 @@ def determineEncodingFromD1Image( image, debug_mode ):
         #  SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - END
         
         # LOCATING CIRCULAR IDENTIFIER - START
+
         cid_corner_indx, cid_indx, cid_found = dcdt.determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debug_mode )
+
         if( not cid_found ):
                 return []
         # LOCATING CIRCULAR IDENTIFIER - END
@@ -134,8 +158,7 @@ def decodeImage(image, cascade_debug_mode):
         elif(cascade_debug_mode == 3):
                 DEBUG_D1E_FLAG = True
                 DEBUG_DENC_FLAG = True
-        
-        encodedImage = extractD1Domain(image, DEBUG_D1E_FLAG)
+        encodedImage, _, _ = extractD1Domain(image, DEBUG_D1E_FLAG)
         if not len(encodedImage): 
                 return []
         else:
@@ -146,7 +169,7 @@ def decodeImageSection(image, crnrs):
         imgn = image
         x1, y1, x2, y2 = int(crnrs[0]), int(crnrs[1]), int(crnrs[2]), int(crnrs[3])
         image_section = imgn[y1:y2, x1:x2]
-        encodedImage = extractD1Domain( image_section, False )
+        encodedImage, _, _ = extractD1Domain( image_section, False )
         
         if not len(encodedImage): 
                 return []

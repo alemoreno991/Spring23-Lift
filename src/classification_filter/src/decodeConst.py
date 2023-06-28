@@ -1,3 +1,5 @@
+import numpy as np
+
 ENCODING_VERSION = 2
 
 #// DEBUG PROPERTIES
@@ -51,6 +53,17 @@ REL_RECT_SIZE_PERCENT_THRESH = 10
 RECT_CUTOFF_SIZE = 7
 
 CONTOUR_EDIST_PERCENT_THRES = 7.5
+ 
+RECT_MINIMUM_SCREEN_PERCENTAGE = .1
+RECT_BOUNDING_CONTOUR_AREA_THRESHOLD = 30
+RECT_UPPER_COMPARISON_PERCENT_ERROR_THRESHOLD = 30
+RECT_LOWER_COMPARISON_PERCENT_ERROR_THRESHOLD = 30
+
+RECT_PARALLEL_ANGLE_THRESH = 30
+RECT_CENTROID_DISTANCE_THRESHOLD = 20
+
+RECT_INSIDE_DISTANCE_THRESHOLD = 20
+
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 CIRC_AREA_LOWER_PERCENT_THRESHOLD = 30
 CIRC_AREA_UPPER_PERCENT_THRESHOLD = 10
@@ -71,3 +84,15 @@ MEDIAN_BLUR_SIZE = 1
 GAUSS_BLUR_MORPH_SIZE = 2
 DILATION_MORPH_SIZE = 1
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+#//POSE CONSTANTS - CURRENTLY ANTONIOS LAPTOP CAMERA
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+CAMERA_MATRIX = np.array([[ 608.54554687,  0,            306.08689476],\
+                          [0,              610.79113343, 249.15590665],\
+                          [0,              0,            1]],dtype = "float32")
+DISTANCE_COEFFICIENTS = np.array([-0.06171222,  
+                                0.31699824,
+                                0.00144633,
+                                -0.00316355,
+                                -0.69987865], dtype = "float32")
