@@ -74,6 +74,7 @@ def extractD1Domain(image, debug_mode):
                                      int(float(dcdc.ENCODING_CROP_RATIO)*fc_median_distance):int((1-float(dcdc.ENCODING_CROP_RATIO))*fc_median_distance) ]
         
         ######################################################################################################################################### POSE DETERMINATION - START
+        rvec, tvec = [],[]
         if( len(rect_contour_centroids) == 4 ):
                 # SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - START
                 img_height, img_width, _ = encodedImage.shape
@@ -87,9 +88,6 @@ def extractD1Domain(image, debug_mode):
                         if debug_mode:  
                                 dt.showAxesOnImage(rvec, tvec, dcdc.CAMERA_MATRIX, dcdc.DISTANCE_COEFFICIENTS, "Axes", image)
                                 cv.waitKey(0)
-        #elif( len(rect_contour_centroids) < 4 and len(rect_contour_centroids) > 1):
-        else:
-                rvec, tvec = [],[]
         ######################################################################################################################################### POSE DETERMINATION - END
 
 
