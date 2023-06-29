@@ -17,8 +17,8 @@ MAIN = main.py
 NAME = yolov7-tiny-custom
 WEIGHTS_CUSTOM = $(PWD)/detection_nnetwork/customize_yolo/runs/train/$(NAME)/weights/best.pt
 
-TEST_ITEM = $(PWD)/test_items/videos/test06132023.mp4
-# TEST_ITEM = $(PWD)/test_items/images/test06132023.png
+# TEST_ITEM = $(PWD)/test_items/videos/test06132023.mp4
+TEST_ITEM = $(PWD)/test_items/images/test06132023.png
 
 
 run_default:

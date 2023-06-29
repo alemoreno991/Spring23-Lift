@@ -124,9 +124,8 @@ def showAxesOnImage(rvec, tvec, CAMERA_MATRIX, DISTANCE_COEFFICIENTS, title:str,
                                                 [axis_length, 0, 0],
                                                 [0, axis_length, 0], [0, 0, axis_length]]),
                                                 rvec, tvec, CAMERA_MATRIX, DISTANCE_COEFFICIENTS)
-    
-    cv.line(drawing, tuple(axis_points[0].ravel()), tuple(axis_points[1].ravel()), (0, 0, 255), 3)  # X-axis (red)
-    cv.line(drawing, tuple(axis_points[0].ravel()), tuple(axis_points[2].ravel()), (0, 255, 0), 3)  # Y-axis (green)
-    cv.line(drawing, tuple(axis_points[0].ravel()), tuple(axis_points[3].ravel()), (255, 0, 0), 3)  # Z-axis (blue)
+    cv.line(drawing, tuple(axis_points[0].astype(int).ravel()), tuple(axis_points[1].astype(int).ravel()), (0, 0, 255), 3)  # X-axis (red)
+    cv.line(drawing, tuple(axis_points[0].astype(int).ravel()), tuple(axis_points[2].astype(int).ravel()), (0, 255, 0), 3)  # Y-axis (green)
+    cv.line(drawing, tuple(axis_points[0].astype(int).ravel()), tuple(axis_points[3].astype(int).ravel()), (255, 0, 0), 3)  # Z-axis (blue)
     cv.imshow(title, drawing)
 

@@ -229,7 +229,7 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
                 cv.waitKey(0)
                 
 
-        if len(rect_contours) == 4 or len(rect_contours_recovery) == 0:
+        if len(rect_contours) == 4 or len(rect_contours_recovery) == 0 or len(rect_contours) == 0:
                 return rect_contours , rect_contour_centroids, rect_contour_angles , rect_contour_areas , poly_contour_areas
 
 
@@ -243,15 +243,15 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
 
         #SET UPPER AND LOWER THREHSOLDS
         poly_lowest_perim = cv.arcLength(rect_contours[0],True)
-        poly_highest_perim = cv.arcLength(rect_contours[0],True)
+        # poly_highest_perim = cv.arcLength(rect_contours[0],True)
         rect_lowest_area = rect_contour_areas[0]
         rect_highest_area = rect_contour_areas[0]
 
         for ii in range(0,len(rect_contours)):
                 if(cv.arcLength(rect_contours[ii],True) < poly_lowest_perim):
                         poly_lowest_perim = cv.arcLength(rect_contours[ii],True)
-                else:
-                        poly_highest_perim = cv.arcLength(rect_contours[ii],True)
+                # else:
+                #         poly_highest_perim = cv.arcLength(rect_contours[ii],True)
                 if(rect_contour_areas[ii] < rect_lowest_area):
                         rect_lowest_area = rect_contour_areas[ii]
                 else:
@@ -278,11 +278,11 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
 
         if len(rect_contours_recovery2) > 0:
 
-                rect_perim_avg = 0
+                # rect_perim_avg = 0
                 rect_perim_total = 0
                 for ii in range(0,len(rect_contours)):
                         rect_perim_total = rect_perim_total + cv.arcLength(rect_contours[ii],True)
-                rect_perim_avg = rect_perim_total / len(rect_contours)
+                # rect_perim_avg = rect_perim_total / len(rect_contours)
 
                 for ii in range(0,len(rect_contours_recovery2)):
                         poly_perim_fail2 = cv.arcLength(rect_contours_recovery2[ii],True)
@@ -307,7 +307,7 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
         if len(rect_contours_recovery3) > 0:
                 marker_centroid = findMarkerCentroid(rect_contour_centroids, rect_contour_angles, debug_mode)
                 if len(rect_contours) == 3:
-                        avg_dist_from_centroid, avg_dist_x, avg_dist_y, dist_total = 0,0,0,0
+                        avg_dist_from_centroid, dist_total = 0,0
                         #FIND AVG DISTANCE TO MARKER CENTROID
                         for ii in range(0,len(rect_contours)):
                                 dist_total = dist_total + est.euclideanDistance(rect_contour_centroids[ii] , marker_centroid)
