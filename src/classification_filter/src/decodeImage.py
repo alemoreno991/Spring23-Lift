@@ -87,7 +87,8 @@ def extractD1Domain(image, debug_mode):
                         if debug_mode:  
                                 dt.showAxesOnImage(rvec, tvec, dcdc.CAMERA_MATRIX, dcdc.DISTANCE_COEFFICIENTS, "Axes", image)
                                 cv.waitKey(0)
-        elif( len(rect_contour_centroids) < 4 and len(rect_contour_centroids) > 1):
+        #elif( len(rect_contour_centroids) < 4 and len(rect_contour_centroids) > 1):
+        else:
                 rvec, tvec = [],[]
         ######################################################################################################################################### POSE DETERMINATION - END
 
