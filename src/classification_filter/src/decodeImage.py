@@ -9,7 +9,7 @@ import time
 import sys
 
 # TODO ADD CHECK FOR WHEN ID TOO MANY OR TOO LITTLE BARS WERE FOUND
-def extractD1Domain(image, debug_mode):
+def extractD1Domain(image, debug_mode, on_hardware = False):
 
         # SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - START
         src_gray = cv.cvtColor( image, cv.COLOR_BGR2GRAY )
@@ -18,16 +18,16 @@ def extractD1Domain(image, debug_mode):
         src_eval_contours = cv.medianBlur( src_blur, int( 2*dcdc.MEDIAN_BLUR_SIZE+1 ) )
 
         #  SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - END
-        if(debug_mode):
+        if(debug_mode and (not on_hardware) ):
                 cv.imshow( "D3 IMAGE USED TO CALCULATE CONTOURS", src_eval_contours) 
                 cv.waitKey(0)
 
         #  FIND LOCATING BARS - START
         rect_contours, rect_contour_centroids, rect_contour_angles, rect_contour_areas, poly_contour_areas = \
-                dcdt.determineCandidateRectIDbars( src_eval_contours, debug_mode )
+                dcdt.determineCandidateRectIDbars( src_eval_contours, debug_mode, on_hardware )
 
-        if( len(rect_contour_centroids) < 2 ):
-                print("[ERROR] CLASSIFICATION FILTER FOUND LESS THAN 2 ID-BARS AND CAN NOT CONTINUE")
+        if( debug_mode and len(rect_contour_centroids) < 2 ):
+                print("\n[DEBUG]: CLASSIFICATION FILTER FOUND LESS THAN 2 ID-BARS ... SKIPPING")
                 return [],[],[]
 
         #  FIND LOCATING BARS - END
@@ -35,23 +35,24 @@ def extractD1Domain(image, debug_mode):
         #########################################################################################################################################
         #  PROTECTION AGAINST MORE/LESS THAN FOR 4 BARS - START
         if(debug_mode):
-                print( "[DEBUG] FOUND: " + str(len(rect_contour_centroids)) + " IDENTIFING BARS" )
-                dt.showContours(rect_contours,"CONTOURS THAT PASS ALL GEOMETRY TESTS",image.shape)
-                cv.waitKey(0)
+                print( "\n[DEBUG]: FOUND: " + str(len(rect_contour_centroids)) + " IDENTIFING BARS" )
+                if( not on_hardware ):
+                        dt.showContours(rect_contours,"CONTOURS THAT PASS ALL GEOMETRY TESTS",image.shape)
+                        cv.waitKey(0)
 
 
         rect_contours , rect_contour_centroids, rect_contour_angles , rect_contour_areas , poly_contour_areas = \
-                dcdt.attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contour_angles , rect_contour_areas , poly_contour_areas, debug_mode, image.shape )
+                dcdt.attemptIdBarCorrections( image.shape, rect_contours , rect_contour_centroids, rect_contour_angles , rect_contour_areas , poly_contour_areas, debug_mode, on_hardware )
 
         if( len(rect_contour_centroids) > 4 or len(rect_contour_centroids) < 2 ):
                 if(debug_mode):
-                        print( "[ERROR] ID BAR CORRECTION FAILED AS THERE ARE >4 ID-BARS OR >2 ID-BARS: " + str(len(rect_contour_centroids))  )
+                        print( "\n[DEBUG]: ID BAR CORRECTION FAILED. THERE ARE " + str(len(rect_contour_centroids)) + " ID-BARS ... SKIPPING"  )
                 return [],[],[]
         else:
                 if(debug_mode):
-                        print( "[DEBUG] ID BAR CORRECTION SUCCESS AS THERE ARE <4 ID-BARS: " + str(len(rect_contour_centroids))  )
+                        print( "\n[DEBUG]: ID BAR CORRECTION SUCCESS. THERE ARE " + str(len(rect_contour_centroids)) + " ID-BARS" )
 
-        if(dcdc.DECODER_SHOWCASE_MODE):
+        if( dcdc.DECODER_SHOWCASE_MODE and (not on_hardware) ):
                 dt.showContoursAndCentersOnImage(rect_contours,rect_contour_centroids,"PASSING CONTOURS ON IMAGE",image)
                 cv.waitKey(0)
         #  PROTECTION AGAINST MORE/LESS THAN FOR 4 BARS - END
@@ -82,16 +83,23 @@ def extractD1Domain(image, debug_mode):
                 col_seg = int(img_width/dcdc.ENCODING_LENGTH)
                 segment_area = img_height * img_width / ( dcdc.ENCODING_LENGTH * dcdc.ENCODING_LENGTH )
                 #  SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - END  
-                cid_corner_indx, cid_indx, cid_found = dcdt.determineCIDIndices( encodedImage, row_seg, col_seg, segment_area, debug_mode )
+
+                ### # TODO: REARRANGE FUNCTION EXECUTION SO THIS DOESN'T HAPPEN TWICE
+                encoded_gray = cv.cvtColor( encodedImage.copy(), cv.COLOR_BGR2GRAY )
+                _,encoded_thresh_prelim = cv.threshold( 255-encoded_gray, 255-dcdc.GREYSCALE_TO_255_THRESHOLD, 255, cv.THRESH_TOZERO )
+                encoded_eval_contours = 255 - encoded_thresh_prelim
+                ###
+
+                cid_corner_indx, cid_indx, cid_found = dcdt.determineCIDIndices( encoded_eval_contours, row_seg, col_seg, segment_area, debug_mode, on_hardware)
                 if cid_found:
                         rvec, tvec = dcdt.determinePoseFrom4IDBars(transformation_mat, fc_median_distance, cid_corner_indx)
-                        if debug_mode:  
+                        if( debug_mode and (not on_hardware)):  
                                 dt.showAxesOnImage(rvec, tvec, dcdc.CAMERA_MATRIX, dcdc.DISTANCE_COEFFICIENTS, "Axes", image)
                                 cv.waitKey(0)
         ######################################################################################################################################### POSE DETERMINATION - END
 
 
-        if(debug_mode):
+        if(debug_mode and (not on_hardware)):
                 cv.imshow( "D2 CROPPED IMAGE", warped_image); 
                 cv.imshow( "D1 ENCODED IMAGE", encodedImage); 
                 cv.waitKey(); 
@@ -99,7 +107,7 @@ def extractD1Domain(image, debug_mode):
 
 
 
-def determineEncodingFromD1Image( image, debug_mode ):
+def determineEncodingFromD1Image( image, debug_mode, on_hardware = False):
        
         # SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - START
         img_height, img_width, _ = image.shape
@@ -114,7 +122,7 @@ def determineEncodingFromD1Image( image, debug_mode ):
         
         # LOCATING CIRCULAR IDENTIFIER - START
 
-        cid_corner_indx, cid_indx, cid_found = dcdt.determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debug_mode )
+        cid_corner_indx, cid_indx, cid_found = dcdt.determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debug_mode, on_hardware )
 
         if( not cid_found ):
                 return []
@@ -123,20 +131,19 @@ def determineEncodingFromD1Image( image, debug_mode ):
 
         # DETERMINE BIT ENCODING - START
         if dcdc.ENCODING_VERSION == 1:
-                pre_bit_encoding, pre_bit_pass = dcdt.evaluateV1BitEncoding( src_eval_contours, row_seg, col_seg, segment_area, cid_indx, debug_mode )
+                pre_bit_encoding, pre_bit_pass = dcdt.evaluateV1BitEncoding( src_eval_contours, row_seg, col_seg, segment_area, cid_indx, debug_mode, on_hardware )
         elif dcdc.ENCODING_VERSION == 2:
-                pre_bit_encoding, pre_bit_pass = dcdt.evaluateV2BitEncoding( src_eval_contours, row_seg, col_seg, segment_area, cid_indx, cid_corner_indx, debug_mode )
+                pre_bit_encoding, pre_bit_pass = dcdt.evaluateV2BitEncoding( src_eval_contours, row_seg, col_seg, segment_area, cid_indx, cid_corner_indx, debug_mode, on_hardware )
         else:
-                print( "LATEST ENCODING VERSION IS v2. VERSION REQUESTED WAS: v" + str(dcdc.ENCODING_VERSION) )
+                print( "\n[ERROR]: LATEST ENCODING VERSION IS v2. VERSION REQUESTED WAS: v" + str(dcdc.ENCODING_VERSION) )
                 return []
         
         bit_encoding = []
         if( pre_bit_pass and cid_found):
                 bit_encoding =  dcdt.readMappedEncoding( cid_indx, pre_bit_encoding )
 
-
         # DETERMINE BIT ENCODING - END
-        if(dcdc.DECODER_SHOWCASE_MODE):
+        if(dcdc.DECODER_SHOWCASE_MODE and (not on_hardware)):
                 show_image = image.copy()
                 dt.showEncodingInformation( pre_bit_encoding, row_seg, dcdc.ENCODING_LENGTH, "DECODED MESSAGE",  show_image ) 
                 cv.waitKey(0)
@@ -145,7 +152,7 @@ def determineEncodingFromD1Image( image, debug_mode ):
 
 
 
-def decodeImage(image, cascade_debug_mode):
+def decodeImage(image, cascade_debug_mode, cascade_on_hardware = False):
         DEBUG_D1E_FLAG = False
         DEBUG_DENC_FLAG = False
         if(cascade_debug_mode == 1):
@@ -157,23 +164,51 @@ def decodeImage(image, cascade_debug_mode):
         elif(cascade_debug_mode == 3):
                 DEBUG_D1E_FLAG = True
                 DEBUG_DENC_FLAG = True
-        encodedImage, _, _ = extractD1Domain(image, DEBUG_D1E_FLAG)
+        encodedImage, _, _ = extractD1Domain(image, DEBUG_D1E_FLAG, cascade_on_hardware )
+        
         if not len(encodedImage): 
+                print('\n[RESULT]: ENCODED ROI COULD NOT BE DETERMINED')
                 return []
         else:
-                return determineEncodingFromD1Image( encodedImage, DEBUG_DENC_FLAG )
+                bit_encoding = determineEncodingFromD1Image( encodedImage, DEBUG_DENC_FLAG, cascade_on_hardware )
+                if not len(bit_encoding):
+                        print('\n[RESULT]: MARKER ENCODING COULD NOT BE DECODED')
+                else:
+                        print('\n[RESULT]: ' + str(bit_encoding))
+                
+                return bit_encoding
 
 
-def decodeImageSection(image, crnrs):
+
+def decodeImageSection(image, crnrs, cascade_debug_mode, cascade_on_hardware = False):
         imgn = image
         x1, y1, x2, y2 = int(crnrs[0]), int(crnrs[1]), int(crnrs[2]), int(crnrs[3])
         image_section = imgn[y1:y2, x1:x2]
-        encodedImage, _, _ = extractD1Domain( image_section, False )
+
+        DEBUG_D1E_FLAG = False
+        DEBUG_DENC_FLAG = False
+        if(cascade_debug_mode == 1):
+                DEBUG_D1E_FLAG = True
+                DEBUG_DENC_FLAG = False
+        elif(cascade_debug_mode == 2):
+                DEBUG_D1E_FLAG = False
+                DEBUG_DENC_FLAG = True
+        elif(cascade_debug_mode == 3):
+                DEBUG_D1E_FLAG = True
+                DEBUG_DENC_FLAG = True
+        encodedImage, _, _ = extractD1Domain( image_section, DEBUG_D1E_FLAG, cascade_on_hardware )
         
         if not len(encodedImage): 
+                print('\n[RESULT]: ENCODED ROI COULD NOT BE DETERMINED')
                 return []
         else:
-                return determineEncodingFromD1Image( encodedImage, False )
+                bit_encoding = determineEncodingFromD1Image( encodedImage, DEBUG_DENC_FLAG, cascade_on_hardware )
+                if not len(bit_encoding):
+                        print('\n[RESULT]: MARKER ENCODING COULD NOT BE DECODED')
+                else:
+                        print('\n[RESULT]: ' + str(bit_encoding))
+                
+                return bit_encoding
 
         
 
@@ -185,8 +220,8 @@ def main():
         assert imageName is not None, "[ERROR] file could not be read, check with os.path.exists()"
         bitencoding = decodeImage(src,dcdc.DECODER_DEBUG_MODE)
 
-        print("\nPREDICTED ENCODING:\n"+str(bitencoding)+'\n')
-        print("Process Time: " + str( round( time.time() - start, 5 )  ) + '\n')
+        print("\nPREDICTED ENCODING:\n"+str(bitencoding))
+        print("Process Time: " + str( round( time.time() - start, 5 )  ) )
 
 if __name__ == '__main__':
         main()

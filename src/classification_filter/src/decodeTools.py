@@ -5,7 +5,7 @@ from . import metrics2D as est
 from . import decodeConst as dcdc
 from . import drawingTools as dt
 
-def determineCandidateRectIDbars( src_atleast_grys, debug_mode ):
+def determineCandidateRectIDbars( src_atleast_grys, debug_mode, on_hardware = False):
         img_height, img_width = src_atleast_grys.shape
         rect_contours, rect_contours_pass1, rect_contour_centroids, rect_contour_angles, rect_contour_areas, poly_contour_areas = [], [], [], [], [], []
         canny_output = cv.Canny( src_atleast_grys, 10, 200, True )
@@ -31,13 +31,12 @@ def determineCandidateRectIDbars( src_atleast_grys, debug_mode ):
                                 else:
                                         rect_contour_angles.append( 90. + approx_rect_angle )
         
-        if(debug_mode):
+        if(debug_mode and (not on_hardware) ):
                 dt.showContours(contours,"CONTOURS IN D3",src_atleast_grys.shape)
                 dt.showContours(rect_contours_pass1,"CONTOURS THAT PASS EVERYTHING BUT ASPECT-RATIO",src_atleast_grys.shape)
                 cv.waitKey(0)
 
         return rect_contours, rect_contour_centroids, rect_contour_angles, rect_contour_areas, poly_contour_areas
-
 
 
 def determineWarpedImageFrom4IdBars(image, rect_contour_centroids, debug_mode):
@@ -94,7 +93,6 @@ def determineWarpedImageFrom4IdBars(image, rect_contour_centroids, debug_mode):
         return warped_image,fc_median_distance, transformationMat
 
 
-
 def determineWarpedImageFrom2or3IdBars(image, rect_contour_centroids, rect_contour_angles, DEBUG_MODE):
         # TODO: DETERMINE THE ROATION ANGLE IS INCONSITENT (OFF BY 180 IN CERTAIN UNIDENTIFIED CONDITIONS)
         ref_angle = rect_contour_angles[0]
@@ -127,8 +125,7 @@ def determineWarpedImageFrom2or3IdBars(image, rect_contour_centroids, rect_conto
         return warped_image, fc_median_distance
 
 
-
-def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contour_angles , rect_contour_areas , poly_contour_areas, debug_mode, image_shape ):
+def attemptIdBarCorrections( image_shape, rect_contours , rect_contour_centroids, rect_contour_angles , rect_contour_areas , poly_contour_areas, debug_mode, on_hardware = False  ):
         # 1ST PROTECTION FOR MORE THAN 4 BARS (CENTROID PROXIMITY) -START
         rect_contours_corr, rect_contour_centroids_corr, rect_contour_angles_corr, rect_contour_areas_corr, poly_contour_areas_corr = [], [], [], [], []
         rect_contours_corr.append( rect_contours[0] )
@@ -167,7 +164,7 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
         rect_contour_angles = rect_contour_angles_corr
         rect_contour_areas = rect_contour_areas_corr
         poly_contour_areas = poly_contour_areas_corr
-        if(debug_mode):
+        if(debug_mode and (not on_hardware)):
                         dt.showContoursAndAreas(rect_contours,"PASSED FIRST PROTECTION",image_shape)
                         cv.waitKey(0)
         # 1ST PROTECTION FOR MORE THAN 4 BARS (CENTROID PROXIMITY) - END
@@ -191,7 +188,7 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
         rect_contour_areas = rect_contour_areas_corr
         poly_contour_areas = poly_contour_areas_corr
 
-        if(debug_mode):
+        if(debug_mode and (not on_hardware) ):
                 dt.showContoursAndAreas(rect_contours,"PASSED SECOND PROTECTION",image_shape)
                 cv.waitKey(0)
 
@@ -222,11 +219,11 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
         poly_contour_areas = poly_contour_areas_corr
 
         if debug_mode:
-                if len(rect_contours) == 4:
-                        print("[DEBUG] 4 MARKERS DETECTED AT SECOND PROTECTION. EXITING BAR CORRECTIONS")
-
-                dt.showContoursAndAreas(rect_contours,"PASSED THIRD PROTECTION",image_shape)
-                cv.waitKey(0)
+                if len(rect_contours) == 4 or len(rect_contours) == 0:
+                        print("\n[DEBUG]: %2d MARKERS DETECTED AT SECOND PROTECTION. EXITING BAR CORRECTIONS" %(len(rect_contours)))
+                if (not on_hardware):
+                        dt.showContoursAndAreas(rect_contours,"PASSED THIRD PROTECTION",image_shape)
+                        cv.waitKey(0)
                 
 
         if len(rect_contours) == 4 or len(rect_contours_recovery) == 0 or len(rect_contours) == 0:
@@ -266,7 +263,7 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
                         rect_contour_areas_recovery2.append( rect_contour_areas_recovery[ii]  )
                         poly_contour_areas_recovery2.append( poly_contour_areas_recovery[ii] ) 
 
-        if(debug_mode):
+        if(debug_mode and (not on_hardware)):
                 dt.showContoursAndAreas(rect_contours_recovery2,"PASSED FIRST RECOVERY TEST",image_shape)
                 cv.waitKey(0)
                 
@@ -294,7 +291,7 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
                                 rect_contour_areas_recovery3.append( rect_contour_areas_recovery2[ii]  )
                                 poly_contour_areas_recovery3.append( poly_contour_areas_recovery2[ii] ) 
                 
-                if(debug_mode):
+                if(debug_mode and (not on_hardware)):
                         dt.showContoursAndPerimeters(rect_contours_recovery3,"PASSED SECOND RECOVERY TEST",image_shape)
                         cv.waitKey(0)
                 
@@ -331,7 +328,7 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
                                                 rect_contour_areas.append( rect_contour_areas_recovery3[ii]  )
                                                 poly_contour_areas.append( poly_contour_areas_recovery3[ii] )
          
-        if(debug_mode):
+        if(debug_mode and (not on_hardware)):
                 dt.showContours(rect_contours,"AFTER RECOVERY",image_shape)
                 cv.waitKey(0)
 
@@ -373,7 +370,7 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
                         rect_contour_areas = [ rect_contour_areas[sorted_indx[ii]] for ii in range(0,dcdc.RECT_CUTOFF_SIZE) ]
                         poly_contour_areas = [ poly_contour_areas[sorted_indx[ii]] for ii in range(0,dcdc.RECT_CUTOFF_SIZE) ]
 
-                if(debug_mode):
+                if(debug_mode and (not on_hardware)):
                         dt.showContours(rect_contours,"CONTOURS AFTER TRIMMING",image_shape)
                         cv.waitKey(0)
 
@@ -402,7 +399,7 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
                         else:
                                 size_before = len(rect_contour_areas) 
 
-                if(debug_mode):
+                if(debug_mode and (not on_hardware) ):
                         dt.showContours(rect_contours,"CONTOURS AFTER FINAL PROTECTION",image_shape)
                         cv.waitKey(0)
         # 2ND PROTECTION FOR MORE THAN 4 BARS ( RECT APPROX STD METHOD ) - END
@@ -451,8 +448,7 @@ def attemptIdBarCorrections( rect_contours , rect_contour_centroids, rect_contou
         return rect_contours , rect_contour_centroids, rect_contour_angles , rect_contour_areas , poly_contour_areas
 
 
-
-def determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debug_mode ):
+def determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debug_mode, on_hardware = False ):
         # LOCATING CIRCULAR IDENTIFIER - START
         cid_corner_indx = int(-1)
         cid_indx = int(-1) 
@@ -506,21 +502,21 @@ def determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debu
 
 
         if( debug_mode ):
-                print( "[DEBUG] CIRC-ID IS IN " + str(cid_indx) + "R-POSITION" )
-                
-                crnr0_show_img = crnr0_img
-                crnr1_show_img = crnr1_img
-                crnr2_show_img = crnr2_img
-                crnr3_show_img = crnr3_img
+                print( "\n[DEBUG]: CIRC-ID IS IN " + str(cid_indx) + "R-POSITION" )
+                if(not on_hardware):
+                        crnr0_show_img = crnr0_img
+                        crnr1_show_img = crnr1_img
+                        crnr2_show_img = crnr2_img
+                        crnr3_show_img = crnr3_img
 
-                cv.imshow("THRESHED IMAGE OF ENCODING", src_eval_contours)
-                dt.showContoursOnImage(crnr0_cntrs,"CORNER0 CONTOURS IN D1",crnr0_show_img)
-                dt.showContoursOnImage(crnr1_cntrs,"CORNER1 CONTOURS IN D1",crnr1_show_img)
-                dt.showContoursOnImage(crnr2_cntrs,"CORNER2 CONTOURS IN D1",crnr2_show_img)
-                dt.showContoursOnImage(crnr3_cntrs,"CORNER3 CONTOURS IN D1",crnr3_show_img)
-                cv.waitKey(0)
+                        cv.imshow("THRESHED IMAGE OF ENCODING", src_eval_contours)
+                        dt.showContoursOnImage(crnr0_cntrs,"CORNER0 CONTOURS IN D1",crnr0_show_img)
+                        dt.showContoursOnImage(crnr1_cntrs,"CORNER1 CONTOURS IN D1",crnr1_show_img)
+                        dt.showContoursOnImage(crnr2_cntrs,"CORNER2 CONTOURS IN D1",crnr2_show_img)
+                        dt.showContoursOnImage(crnr3_cntrs,"CORNER3 CONTOURS IN D1",crnr3_show_img)
+                        cv.waitKey(0)
 
-        if(dcdc.DECODER_SHOWCASE_MODE):
+        if(dcdc.DECODER_SHOWCASE_MODE and (not on_hardware)):
                 show_image = src_eval_contours.copy()
                 for ii in range(0,dcdc.ENCODING_LENGTH,2):
                         for jj in range(0,dcdc.ENCODING_LENGTH,2):
@@ -558,8 +554,7 @@ def determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debu
         # LOCATING CIRCULAR IDENTIFIER - END
 
 
-
-def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid_indx, cid_corner_indx, debug_mode ):
+def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid_indx, cid_corner_indx, debug_mode, on_hardware = False ):
         decode_image = src_atleast_grys
         decode_blur = cv.medianBlur( decode_image, 3 )
         row_sub_seg = int(row_seg/2)
@@ -642,14 +637,14 @@ def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid
                                 pre_bit_pass = False
 
         if(debug_mode):
-                print('[DEBUG]: ENCODING INFORMATION FOR 1ST TRIAL:')
-                print('[DEBUG]: ENCODED SEGMENT: ' + str(enc_bit_encoding) )
-                print('[DEBUG]: IDENTIFIER SEGMENT: ' + str(id_bit_encoding) )
-                print('[DEBUG]: ENCODED SEGMENT PW: ' + str(segment_percentw_vec) )
-                print('[DEBUG]: IDENTIFIER SEGMENT PW: ' + str(segment_id_percentw_vec) )
+                #print('[DEBUG]: ENCODING INFORMATION FOR 1ST TRIAL:')
+                print('\n[DEBUG]: ENCODED SEGMENT: ' + str(enc_bit_encoding) )
+                print('\n[DEBUG]: IDENTIFIER SEGMENT: ' + str(id_bit_encoding) )
+                print('\n[DEBUG]: ENCODED SEGMENT PW: ' + str(segment_percentw_vec) )
+                print('\n[DEBUG]: IDENTIFIER SEGMENT PW: ' + str(segment_id_percentw_vec) )
 
 
-        if(debug_mode):
+        if(debug_mode and (not on_hardware)):
                 show_image = src_atleast_grys.copy()
                 for ii in range(0,dcdc.ENCODING_LENGTH):
                         for jj in range(0,dcdc.ENCODING_LENGTH):
@@ -808,10 +803,9 @@ def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid
                         pre_bit_pass = False
 
         if(debug_mode):
-                print('[DEBUG]: PREBIT ENCODING: \n             ' + str(pre_bit_encoding) )
+                print('\n[DEBUG]: PREBIT ENCODING:' + str(pre_bit_encoding) )
         
         return pre_bit_encoding, pre_bit_pass
-
 
 
 def evaluateV1BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid_indx, debug_mode ):
@@ -871,7 +865,6 @@ def evaluateV1BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid
         return pre_bit_encoding, pre_bit_pass
 
 
-
 def readMappedEncoding( cid_indx, pre_bit_encoding ):
         # APPARENTLY SWITCH/MATCH STATEMENTS ARE NEW TO PYTHON
         if( cid_indx == 0 ):
@@ -888,6 +881,7 @@ def readMappedEncoding( cid_indx, pre_bit_encoding ):
                                         int(pre_bit_encoding[3]),int(pre_bit_encoding[2]),int(pre_bit_encoding[1]),int(pre_bit_encoding[0]) ]
         
         return bit_encoding
+
 
 def determinePoseFrom4IDBars(transformation_mat, fc_median_distance, circle_indx):
         ## TODO IMPROVE CIRCLE INDEX DETERMINATION

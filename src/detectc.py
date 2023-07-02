@@ -110,7 +110,7 @@ def detectc(save_img=False):
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
 
-                    read_code = cfilter.decodeImageSection(im0,xyxy)
+                    read_code = cfilter.decodeImageSection(im0,xyxy,3,True)
 
                     if save_txt:  # Write to file
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
