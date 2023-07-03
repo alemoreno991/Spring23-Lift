@@ -1,10 +1,10 @@
 import cv2 as cv
 import math
 import numpy as np
-from . import decodeConst as dcdc
-from . import drawingTools as dt
-from . import metrics2D as est
-from . import decodeTools as dcdt
+import decodeConst as dcdc
+import drawingTools as dt
+import metrics2D as est
+import decodeTools as dcdt
 import time
 import sys
 
@@ -60,44 +60,42 @@ def extractD1Domain(image, debug_mode, on_hardware = False):
 
 
         warped_image = []
-        fc_median_distance = 0.
-        if( len(rect_contour_centroids) == 4 ):
-                warped_image,fc_median_distance,transformation_mat = dcdt.determineWarpedImageFrom4IdBars( image, rect_contour_centroids, debug_mode )
-               
-                
+        encodedImage = []
+        fc_median_distance = 0
+        # EXTRACT WARPED IMAGE
+        if( len(rect_contours) == 4 ):
+                warped_image,fc_median_distance,transformation_mat = dcdt.determineWarpedImageFrom4IdBars( image, rect_contour_centroids, debug_mode ) 
+                encodedImage = warped_image[ int(float(dcdc.ENCODING_CROP_RATIO)*fc_median_distance):int((1-float(dcdc.ENCODING_CROP_RATIO))*fc_median_distance), \
+                                        int(float(dcdc.ENCODING_CROP_RATIO)*fc_median_distance):int((1-float(dcdc.ENCODING_CROP_RATIO))*fc_median_distance) ]
+   
         elif( len(rect_contour_centroids) < 4 and len(rect_contour_centroids) > 1):
-                warped_image,fc_median_distance = dcdt.determineWarpedImageFrom2or3IdBars( image, rect_contour_centroids, rect_contour_angles, debug_mode)
+                corner_points = dcdt.determineD1Corners(image, rect_contours, rect_contour_centroids, rect_contour_angles, debug_mode)
+                encodedImage,fc_median_distance,transformation_mat = dcdt.determineWarpedImageFrom4Corners(image, corner_points, debug_mode)
         else: 
                 return [],[],[]
         
-        encodedImage = []
-        encodedImage = warped_image[ int(float(dcdc.ENCODING_CROP_RATIO)*fc_median_distance):int((1-float(dcdc.ENCODING_CROP_RATIO))*fc_median_distance), \
-                                     int(float(dcdc.ENCODING_CROP_RATIO)*fc_median_distance):int((1-float(dcdc.ENCODING_CROP_RATIO))*fc_median_distance) ]
-        
         ######################################################################################################################################### POSE DETERMINATION - START
         rvec, tvec = [],[]
-        if( len(rect_contour_centroids) == 4 ):
-                # SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - START
-                img_height, img_width, _ = encodedImage.shape
-                row_seg = int(img_height/dcdc.ENCODING_LENGTH)
-                col_seg = int(img_width/dcdc.ENCODING_LENGTH)
-                segment_area = img_height * img_width / ( dcdc.ENCODING_LENGTH * dcdc.ENCODING_LENGTH )
-                #  SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - END  
+        # SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - START
+        img_height, img_width, _ = encodedImage.shape
+        row_seg = int(img_height/dcdc.ENCODING_LENGTH)
+        col_seg = int(img_width/dcdc.ENCODING_LENGTH)
+        segment_area = img_height * img_width / ( dcdc.ENCODING_LENGTH * dcdc.ENCODING_LENGTH )
+        # SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - END
 
-                ### # TODO: REARRANGE FUNCTION EXECUTION SO THIS DOESN'T HAPPEN TWICE
-                encoded_gray = cv.cvtColor( encodedImage.copy(), cv.COLOR_BGR2GRAY )
-                _,encoded_thresh_prelim = cv.threshold( 255-encoded_gray, 255-dcdc.GREYSCALE_TO_255_THRESHOLD, 255, cv.THRESH_TOZERO )
-                encoded_eval_contours = 255 - encoded_thresh_prelim
-                ###
+        ### # TODO: REARRANGE FUNCTION EXECUTION SO THIS DOESN'T HAPPEN TWICE
+        encoded_gray = cv.cvtColor( encodedImage.copy(), cv.COLOR_BGR2GRAY )
+        _,encoded_thresh_prelim = cv.threshold( 255-encoded_gray, 255-dcdc.GREYSCALE_TO_255_THRESHOLD, 255, cv.THRESH_TOZERO )
+        encoded_eval_contours = 255 - encoded_thresh_prelim
+        ###
 
-                cid_corner_indx, cid_indx, cid_found = dcdt.determineCIDIndices( encoded_eval_contours, row_seg, col_seg, segment_area, debug_mode, on_hardware)
-                if cid_found:
-                        rvec, tvec = dcdt.determinePoseFrom4IDBars(transformation_mat, fc_median_distance, cid_corner_indx)
+        cid_corner_indx, cid_indx, cid_found = dcdt.determineCIDIndices( encoded_eval_contours, row_seg, col_seg, segment_area, debug_mode, on_hardware)
+        if cid_found:
+                        rvec, tvec = dcdt.determinePose(transformation_mat, fc_median_distance, cid_corner_indx)
                         if( debug_mode and (not on_hardware)):  
                                 dt.showAxesOnImage(rvec, tvec, dcdc.CAMERA_MATRIX, dcdc.DISTANCE_COEFFICIENTS, "Axes", image)
                                 cv.waitKey(0)
         ######################################################################################################################################### POSE DETERMINATION - END
-
 
         if(debug_mode and (not on_hardware)):
                 cv.imshow( "D2 CROPPED IMAGE", warped_image); 

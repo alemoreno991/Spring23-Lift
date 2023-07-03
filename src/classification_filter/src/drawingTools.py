@@ -65,8 +65,6 @@ def showContoursAndCenters( contoursi , centers, title:str, imageref ):
             cv.circle( drawing, ( int(centers[ii][0]) , int(centers[ii][1]) ) , 5, color )
     cv.imshow( title, drawing ) 
 
-
-
 def showContoursAndCentersOnImage( contoursi , centers, title:str, imageref ):
     drawing = imageref
     if (len(contoursi) > 0):
@@ -129,3 +127,9 @@ def showAxesOnImage(rvec, tvec, CAMERA_MATRIX, DISTANCE_COEFFICIENTS, title:str,
     cv.line(drawing, tuple(axis_points[0].astype(int).ravel()), tuple(axis_points[3].astype(int).ravel()), (255, 0, 0), 3)  # Z-axis (blue)
     cv.imshow(title, drawing)
 
+def showPointsOnImage(points,title:str, image):
+    drawing = image
+    for ii in range (0, len(points)):
+        color = ( int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)) )
+        cv.circle( drawing, (int(points[ii][0]) , int(points[ii][1])) , 10, color, 5 )
+    cv.imshow( title, drawing )

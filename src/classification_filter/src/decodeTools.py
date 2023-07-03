@@ -1,15 +1,15 @@
 import cv2 as cv
 import math
 import numpy as np
-from . import metrics2D as est
-from . import decodeConst as dcdc
-from . import drawingTools as dt
+import metrics2D as est
+import decodeConst as dcdc
+import drawingTools as dt
 
 def determineCandidateRectIDbars( src_atleast_grys, debug_mode, on_hardware = False):
         img_height, img_width = src_atleast_grys.shape
         rect_contours, rect_contours_pass1, rect_contour_centroids, rect_contour_angles, rect_contour_areas, poly_contour_areas = [], [], [], [], [], []
         canny_output = cv.Canny( src_atleast_grys, 10, 200, True )
-        contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_KCOS )
+        _, contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_KCOS )
         for ii in range(0,len(contours)):
                 approx_cp = cv.approxPolyDP( contours[ii], 0.025*cv.arcLength(contours[ii],True), True )
                 approx_cp_area = abs( cv.contourArea(approx_cp) )
@@ -471,7 +471,7 @@ def determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debu
                                 crnr3_img = cid_eval_SegementSubmatrix
 
                         canny_output = cv.Canny( cid_eval_SegementSubmatrix, 10, 200 )
-                        contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_L1 )
+                        _, contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_L1 )
                         for kk in range(0,len(contours)):
                                 approx_cp = cv.approxPolyDP( contours[kk], 0.01*cv.arcLength(contours[kk],True), True )
                                 if( len(approx_cp) > dcdc.CIRC_IDENTIFIER_SIDES_THRESHOLD  ):
@@ -883,7 +883,7 @@ def readMappedEncoding( cid_indx, pre_bit_encoding ):
         return bit_encoding
 
 
-def determinePoseFrom4IDBars(transformation_mat, fc_median_distance, circle_indx):
+def determinePose(transformation_mat, fc_median_distance, circle_indx):
         ## TODO IMPROVE CIRCLE INDEX DETERMINATION
 
         inv_perspective_matrix = np.linalg.inv(transformation_mat)
@@ -949,35 +949,9 @@ def findMarkerCentroid(rect_contour_centroids, rect_contour_angles, debug_mode):
                 parallel_flag = False
                 angles = []
                 #ONLY TWO CONTOURS ARE NEEDED
-                for ii in range(0, 2):
-                #CONVERT INTO POSITIVE ANGLE THAT IS LESS THAN 180 DEGREES 
-                        if (rect_contour_angles[0]*rect_contour_angles[1]) < 0:
-                                for jj in range(0,2):
-                                        if rect_contour_angles[jj] < 0:
-                                                rect_contour_angles[jj] += 360
-                                                if rect_contour_angles[jj] >=180:
-                                                        angles.append(rect_contour_angles[jj] - 180)
-                                                else:
-                                                        angles.append(rect_contour_angles[jj])
-                                        else:
-                                                if rect_contour_angles[jj] >=180:
-                                                        angles.append(rect_contour_angles[jj] - 180)
-                                                else:
-                                                        angles.append(rect_contour_angles[jj])
-                                #Negate the angle if over 180
-                                for ii in range (0,len(rect_contour_angles)):
-                                        if rect_contour_angles[ii] >= 180:
-                                                rect_contour_angles[ii] -= 180
-                        else:
-                                for jj in range(0,2):
-                                        if rect_contour_angles[jj] >=180:
-                                                angles.append(rect_contour_angles[jj] - 180)
-                                        else:
-                                                angles.append(rect_contour_angles[jj])
-                
-                difference = abs(angles[0]-angles[1])
-                #IF DIFFERENCE IS CLOSE TO 180 OR CLOSE TO 0 THEN PASS
-                if (difference <= dcdc.RECT_PARALLEL_ANGLE_THRESH or difference > 180 - dcdc.RECT_PARALLEL_ANGLE_THRESH): 
+                parallel_flag = determineIfParallel(rect_contour_angles[0], rect_contour_angles[1])
+
+                if parallel_flag == True: 
                         return  ((rect_contour_centroids[0][0]+rect_contour_centroids[1][0])/2,
                                         (rect_contour_centroids[0][1]+rect_contour_centroids[1][1])/2)
                 else:
@@ -1000,3 +974,211 @@ def findMarkerCentroid(rect_contour_centroids, rect_contour_angles, debug_mode):
                         x_intersection = y_int_difference / slope_difference
                         return (int(x_intersection), int((slopes[0]*x_intersection) + y_intercepts[0]))
 
+def determineD1Corners(image, rect_contours, rect_contour_centroids, rect_angles, debug_mode):
+        slopes = []
+        contour_outter_vertices = []
+        d1_corner_points = [] 
+        parallel_flag = False
+
+        # DETERMINE WETHER TO USE PARALLEL OR ORTHOGONAL BAR METHOD
+        if len(rect_contours) == 3:
+                parallel_flag = False
+                # FIND TWO PARALLEL BARS
+                for ii in range (0,3):
+                        for jj in range(ii+1, 3):
+                                if parallel_flag == True:
+                                        break
+                                if determineIfParallel(rect_angles[ii], rect_angles[jj]) == True:
+                                        rect_contours = [rect_contours[ii], rect_contours[jj]]
+                                        rect_angles = [rect_angles[ii], rect_angles[jj]]
+                                        rect_contour_centroids = [rect_contour_centroids[ii], rect_contour_centroids[jj]]
+                                        parallel_flag = True
+
+
+        elif len(rect_contours) == 2:
+                # DETERMINE IF TWO BARS ARE PARALLEL.
+                parallel_flag = determineIfParallel(rect_angles[0], rect_angles[1])
+
+        ############################################################# COLLECT RECT CONTOURS OUTTER VERTICES - START
+        marker_centroid = findMarkerCentroid(rect_contour_centroids, rect_angles, debug_mode)
+        for ii in range (0,2): # FOR EACH RECT CONTOUR
+                vertices_pairs = [] 
+                rect = cv.minAreaRect(rect_contours[ii])
+                rect_vertices = cv.boxPoints(rect).tolist()
+
+                
+                closest_point = 1 
+                shortest_distance = est.euclideanDistance(rect_vertices[0], rect_vertices[1])
+                for jj in range (2,4):
+                        distance  = est.euclideanDistance(rect_vertices[0], rect_vertices[jj])
+                        if distance < shortest_distance:
+                                closest_point = jj
+                                shortest_distance = distance
+                vertices_pairs.append([rect_vertices[0], rect_vertices[closest_point]])
+                rect_vertices.pop(closest_point)
+                rect_vertices.pop(0)
+                vertices_pairs.append(rect_vertices)
+                outter_vertices = []
+                for jj in range (0,2):
+                        distance1 = est.euclideanDistance(marker_centroid, vertices_pairs[jj][0])
+                        distance2 = est.euclideanDistance(marker_centroid, vertices_pairs[jj][1])
+                        if distance1 > distance2:
+                                outter_vertices.append(vertices_pairs[jj][0])
+                        else:
+                                outter_vertices.append(vertices_pairs[jj][1])
+                contour_outter_vertices.append(outter_vertices)
+
+        # COLLECT RECT CONTOURS OUTTER VERTICES - END 
+
+        if parallel_flag ==  False:
+                # TODO MORE TESTING ON POSE ESTIMATION AFTER TRANSPOSE
+                rect_contours_y_int = []
+                for ii in range (0, 2): # for each contour
+
+                        # GET PERPENDICULAR SLOPE
+                        rect_angles[ii] += 90
+                        slopes.append(math.tan(math.radians(rect_angles[ii])))
+                        # GET Y INTERCEPT
+                        y_intercepts = []
+                        for jj in range(0,2): 
+                                #  y-mx = b
+                                y_intercepts.append(contour_outter_vertices[ii][jj][1] - (slopes[ii] * contour_outter_vertices[ii][jj][0]))
+                        rect_contours_y_int.append(y_intercepts)
+
+                for ii in range (0,2): # FOR EACH POINT IN CONTOUR1
+                        for jj in range (0,2): # FOR EACH POINT IN CONTOUR2
+                                # m1x1 + b1 = m2x2 + b2
+                                # m1x1 - m2x2 = b2- b1
+                                # x1(m1-m2) = b2 - b1
+                                # x1 = b2-b1 / m1-m2
+                                y_int_difference = rect_contours_y_int[1][jj] - rect_contours_y_int[0][ii]
+                                slope_difference = slopes[0] - slopes[1]
+                                x_intersection = y_int_difference / slope_difference
+                                # y = mx + b
+                                d1_corner_points.append( (int(x_intersection), int((slopes[0]*x_intersection) + rect_contours_y_int[0][ii])))
+        else:
+                
+                ################################################################################# PAIR POINTS THAT WILL LIE ON THE SAME LINE - START
+                same_slope_points = []
+                for ii in range (0,2): 
+                        edist1 = est.euclideanDistance(contour_outter_vertices[0][ii], contour_outter_vertices[1][0])
+                        edist2 = est.euclideanDistance(contour_outter_vertices[0][ii], contour_outter_vertices[1][1])
+                        if edist1 < edist2:
+                                same_slope_points.append([contour_outter_vertices[0][ii], contour_outter_vertices[1][0]])
+                        else: 
+                                same_slope_points.append([contour_outter_vertices[0][ii], contour_outter_vertices[1][1]])
+
+                #  PAIR POINTS THAT WILL LIE ON THE SAME LINE - END
+
+                ################################################################################# FIND CORNER POINTS - START
+
+                for ii in range (0, 2): # FOR EACH POINT PAIR
+                        
+                        # FIND SLOPE 
+                        x_diff = same_slope_points[ii][1][0]-same_slope_points[ii][0][0]
+                        y_diff = same_slope_points[ii][1][1]-same_slope_points[ii][0][1]
+                        slope = y_diff/x_diff
+
+                        # FIND Y-INTERCEPT
+                        y_intercept = 0
+                        for jj in range(0,2): # FARTHEST POINT 1 AND 2 AND FIND THE Y INT
+                                # y-mx = b
+                                # y intercept for each pair
+                                y_intercept = same_slope_points[ii][0][1] - (slope * same_slope_points[ii][0][0])
+
+                        # CALCULATE NECESSARY DISTANCES FROM SAME SLOPE POINTS
+
+                        d1 = est.euclideanDistance(same_slope_points[ii][0], same_slope_points[ii][1]) # DIST BETWEEN OUTTER POINTS
+                        d2 = d1 * dcdc.OUTTER_POINT_INNER_CORNER_RATIO                                 # DIST BETWEEN ESTIMATED CORNER POINTS
+                        d3 = (d1 - d2) / 2                                                             # DIST BETWEEN OUTTER POINT AND CLOSEST INNER POINT
+
+                        angle = math.atan(y_diff/x_diff)
+                        deltaX = d3 * math.cos(angle)
+                        # EACH POINT PRODUCES TWO POINTS, KEEP THE ONE THE ONE THAT IS CLOSER
+                        for jj in range (0,2): # FOR EACH POINT IN THE PAIR
+                                y1 = slope * (same_slope_points[ii][jj][0] + deltaX) + y_intercept
+                                y2 = slope * (same_slope_points[ii][jj][0] - deltaX) + y_intercept
+                                dist1 = est.euclideanDistance(marker_centroid, (same_slope_points[ii][jj][0] + deltaX, y1))
+                                dist2 = est.euclideanDistance(marker_centroid, (same_slope_points[ii][jj][0] - deltaX, y2))
+                                if dist1 < dist2:
+                                        d1_corner_points.append([same_slope_points[ii][jj][0] + deltaX, y1])
+                                else:
+                                        d1_corner_points.append([same_slope_points[ii][jj][0] - deltaX, y2])
+
+        if debug_mode:
+                        dt.showPointsOnImage(d1_corner_points,"CORNER POINTS ESTIMATION BASED ON 2 BARS", image)
+                        cv.waitKey(0)
+        return d1_corner_points
+                        
+
+
+def determineWarpedImageFrom4Corners(image, rect_corners, debug_mode):
+        fc_relative_angles = []
+        quadrant0_flag = False
+        quadrant3_flag = False
+        for ii in range(1,4):
+                anglei = est.angleBetweenPoints(rect_corners[0],rect_corners[ii])
+                if( est.determineAngleQuadrant(anglei) == 0 ):
+                        quadrant0_flag = True
+                elif( est.determineAngleQuadrant(anglei) == 3 ):
+                        quadrant3_flag = True
+                fc_relative_angles.append(anglei)
+        
+        if( quadrant0_flag and quadrant3_flag ):
+                for ii in range(0,3):
+                        anglei = fc_relative_angles[ii] + math.pi; 
+                        if( anglei > 2*math.pi ):
+                                anglei = anglei - 2*math.pi
+                        fc_relative_angles[ii] = anglei
+
+        fc_ra_max = fc_relative_angles[0]
+        fc_ra_min = fc_ra_max
+        fc_ra_max_indx = int(1)
+        fc_ra_min_indx = int(1)
+
+        for ii in range(2,4):
+                anglei = fc_relative_angles[ii-1]
+                if( anglei < fc_ra_min ):
+                        fc_ra_min = anglei
+                        fc_ra_min_indx = ii
+                elif( anglei > fc_ra_max ): 
+                        fc_ra_max = anglei
+                        fc_ra_max_indx = ii
+
+        fc_median_indx = int(0)
+        for ii in range(2,4):
+            if( ii != fc_ra_min_indx and ii != fc_ra_max_indx ):
+                fc_median_indx = ii
+        
+        fc_median_distance =  est.euclideanDistance( rect_corners[0],rect_corners[fc_median_indx])
+
+        ordered_centroids = np.array( [ [ rect_corners[0], rect_corners[fc_ra_min_indx], \
+                                          rect_corners[fc_median_indx], rect_corners[fc_ra_max_indx] ] ] , \
+                                      dtype = "float32" )
+        
+        perspective_transformed_centroids = np.array( [ [ ( 0.0, 0), ( fc_median_distance, 0.0), \
+                                                          ( fc_median_distance, fc_median_distance), ( 0, fc_median_distance) ] ], \
+                                                          dtype = "float32" )
+        
+        transformationMat = cv.getPerspectiveTransform(ordered_centroids, perspective_transformed_centroids)
+        warped_image = cv.warpPerspective(image, transformationMat, (int(fc_median_distance), int(fc_median_distance)))
+        
+        return warped_image,fc_median_distance, transformationMat
+
+def determineIfParallel(rect_contour_angle1, rect_contour_angle2):
+        #CONVERT INTO POSITIVE ANGLE THAT IS LESS THAN 180 DEGREES 
+        if rect_contour_angle1 < 0:
+                rect_contour_angle1 +=360
+        if rect_contour_angle1 >= 180:
+                rect_contour_angle1 -=180
+        if rect_contour_angle2 < 0:
+                rect_contour_angle2 +=360
+        if rect_contour_angle2 >= 180:
+                rect_contour_angle2 -=180        
+       
+        difference = abs(rect_contour_angle1-rect_contour_angle2)
+        #IF DIFFERENCE IS CLOSE TO 180 OR CLOSE TO 0 THEN PASS
+        if (difference <= dcdc.RECT_PARALLEL_ANGLE_THRESH or difference > 180 - dcdc.RECT_PARALLEL_ANGLE_THRESH): 
+                return True
+        else:
+                return False
