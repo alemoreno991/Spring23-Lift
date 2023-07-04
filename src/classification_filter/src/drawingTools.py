@@ -131,5 +131,5 @@ def showPointsOnImage(points,title:str, image):
     drawing = image
     for ii in range (0, len(points)):
         color = ( int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)) )
-        cv.circle( drawing, (int(points[ii][0]) , int(points[ii][1])) , 10, color, 5 )
+        cv.circle( drawing, (int(points[ii][0]) , int(points[ii][1])) , 3, color, 3 )
     cv.imshow( title, drawing )

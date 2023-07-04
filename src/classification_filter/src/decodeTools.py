@@ -1,15 +1,15 @@
 import cv2 as cv
 import math
 import numpy as np
-import metrics2D as est
-import decodeConst as dcdc
-import drawingTools as dt
+from . import metrics2D as est
+from . import decodeConst as dcdc
+from . import drawingTools as dt
 
 def determineCandidateRectIDbars( src_atleast_grys, debug_mode, on_hardware = False):
         img_height, img_width = src_atleast_grys.shape
         rect_contours, rect_contours_pass1, rect_contour_centroids, rect_contour_angles, rect_contour_areas, poly_contour_areas = [], [], [], [], [], []
         canny_output = cv.Canny( src_atleast_grys, 10, 200, True )
-        _, contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_KCOS )
+        contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_KCOS )
         for ii in range(0,len(contours)):
                 approx_cp = cv.approxPolyDP( contours[ii], 0.025*cv.arcLength(contours[ii],True), True )
                 approx_cp_area = abs( cv.contourArea(approx_cp) )
@@ -471,7 +471,7 @@ def determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debu
                                 crnr3_img = cid_eval_SegementSubmatrix
 
                         canny_output = cv.Canny( cid_eval_SegementSubmatrix, 10, 200 )
-                        _, contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_L1 )
+                        contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_L1 )
                         for kk in range(0,len(contours)):
                                 approx_cp = cv.approxPolyDP( contours[kk], 0.01*cv.arcLength(contours[kk],True), True )
                                 if( len(approx_cp) > dcdc.CIRC_IDENTIFIER_SIDES_THRESHOLD  ):
@@ -975,9 +975,7 @@ def findMarkerCentroid(rect_contour_centroids, rect_contour_angles, debug_mode):
                         return (int(x_intersection), int((slopes[0]*x_intersection) + y_intercepts[0]))
 
 def determineD1Corners(image, rect_contours, rect_contour_centroids, rect_angles, debug_mode):
-        slopes = []
-        contour_outter_vertices = []
-        d1_corner_points = [] 
+        slopes, contour_outter_vertices, d1_corner_points = [],[],[] 
         parallel_flag = False
 
         # DETERMINE WETHER TO USE PARALLEL OR ORTHOGONAL BAR METHOD
@@ -1031,31 +1029,33 @@ def determineD1Corners(image, rect_contours, rect_contour_centroids, rect_angles
         # COLLECT RECT CONTOURS OUTTER VERTICES - END 
 
         if parallel_flag ==  False:
-                # TODO MORE TESTING ON POSE ESTIMATION AFTER TRANSPOSE
-                rect_contours_y_int = []
-                for ii in range (0, 2): # for each contour
+                # TODO NEEDS IMPROVEMENT - SLOPES GOTTEN USING minAreaRec ARE INNACURATE
+                # rect_contours_y_int = []
+                # for ii in range (0, 2): # for each contour
 
-                        # GET PERPENDICULAR SLOPE
-                        rect_angles[ii] += 90
-                        slopes.append(math.tan(math.radians(rect_angles[ii])))
-                        # GET Y INTERCEPT
-                        y_intercepts = []
-                        for jj in range(0,2): 
-                                #  y-mx = b
-                                y_intercepts.append(contour_outter_vertices[ii][jj][1] - (slopes[ii] * contour_outter_vertices[ii][jj][0]))
-                        rect_contours_y_int.append(y_intercepts)
+                #         # GET PERPENDICULAR SLOPE
+                #         rect_angles[ii] += 90
+                #         slopes.append(math.tan(math.radians(rect_angles[ii])))
+                #         # GET Y INTERCEPT
+                #         y_intercepts = []
+                #         for jj in range(0,2): 
+                #                 #  y-mx = b
+                #                 y_intercepts.append(contour_outter_vertices[ii][jj][1] - (slopes[ii] * contour_outter_vertices[ii][jj][0]))
+                #         rect_contours_y_int.append(y_intercepts)
 
-                for ii in range (0,2): # FOR EACH POINT IN CONTOUR1
-                        for jj in range (0,2): # FOR EACH POINT IN CONTOUR2
-                                # m1x1 + b1 = m2x2 + b2
-                                # m1x1 - m2x2 = b2- b1
-                                # x1(m1-m2) = b2 - b1
-                                # x1 = b2-b1 / m1-m2
-                                y_int_difference = rect_contours_y_int[1][jj] - rect_contours_y_int[0][ii]
-                                slope_difference = slopes[0] - slopes[1]
-                                x_intersection = y_int_difference / slope_difference
-                                # y = mx + b
-                                d1_corner_points.append( (int(x_intersection), int((slopes[0]*x_intersection) + rect_contours_y_int[0][ii])))
+                # for ii in range (0,2): # FOR EACH POINT IN CONTOUR1
+                #         for jj in range (0,2): # FOR EACH POINT IN CONTOUR2
+                #                 # m1x1 + b1 = m2x2 + b2
+                #                 # m1x1 - m2x2 = b2- b1
+                #                 # x1(m1-m2) = b2 - b1
+                #                 # x1 = b2-b1 / m1-m2
+                #                 y_int_difference = rect_contours_y_int[1][jj] - rect_contours_y_int[0][ii]
+                #                 slope_difference = slopes[0] - slopes[1]
+                #                 x_intersection = y_int_difference / slope_difference
+                #                 # y = mx + b
+                #                 d1_corner_points.append( (int(x_intersection), int((slopes[0]*x_intersection) + rect_contours_y_int[0][ii])))
+                print(" [ERROR] ORTHOGONAL POSE AND WARPING CURRENTLY NOT FUNCTIONING")
+                return []
         else:
                 
                 ################################################################################# PAIR POINTS THAT WILL LIE ON THE SAME LINE - START
@@ -1080,11 +1080,7 @@ def determineD1Corners(image, rect_contours, rect_contour_centroids, rect_angles
                         slope = y_diff/x_diff
 
                         # FIND Y-INTERCEPT
-                        y_intercept = 0
-                        for jj in range(0,2): # FARTHEST POINT 1 AND 2 AND FIND THE Y INT
-                                # y-mx = b
-                                # y intercept for each pair
-                                y_intercept = same_slope_points[ii][0][1] - (slope * same_slope_points[ii][0][0])
+                        y_intercept = same_slope_points[ii][0][1] - (slope * same_slope_points[ii][0][0])
 
                         # CALCULATE NECESSARY DISTANCES FROM SAME SLOPE POINTS
 
@@ -1116,7 +1112,9 @@ def determineWarpedImageFrom4Corners(image, rect_corners, debug_mode):
         fc_relative_angles = []
         quadrant0_flag = False
         quadrant3_flag = False
+        print(len(rect_corners))
         for ii in range(1,4):
+                print(ii)
                 anglei = est.angleBetweenPoints(rect_corners[0],rect_corners[ii])
                 if( est.determineAngleQuadrant(anglei) == 0 ):
                         quadrant0_flag = True

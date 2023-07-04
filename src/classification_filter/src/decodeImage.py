@@ -1,10 +1,10 @@
 import cv2 as cv
 import math
 import numpy as np
-import decodeConst as dcdc
-import drawingTools as dt
-import metrics2D as est
-import decodeTools as dcdt
+from . import decodeConst as dcdc
+from . import drawingTools as dt
+from . import metrics2D as est
+from . import decodeTools as dcdt
 import time
 import sys
 
@@ -70,7 +70,10 @@ def extractD1Domain(image, debug_mode, on_hardware = False):
    
         elif( len(rect_contour_centroids) < 4 and len(rect_contour_centroids) > 1):
                 corner_points = dcdt.determineD1Corners(image, rect_contours, rect_contour_centroids, rect_contour_angles, debug_mode)
-                encodedImage,fc_median_distance,transformation_mat = dcdt.determineWarpedImageFrom4Corners(image, corner_points, debug_mode)
+                if len(corner_points) == 4:
+                        encodedImage,fc_median_distance,transformation_mat = dcdt.determineWarpedImageFrom4Corners(image, corner_points, debug_mode)
+                else:
+                        return [],[],[]
         else: 
                 return [],[],[]
         
@@ -97,10 +100,13 @@ def extractD1Domain(image, debug_mode, on_hardware = False):
                                 cv.waitKey(0)
         ######################################################################################################################################### POSE DETERMINATION - END
 
-        if(debug_mode and (not on_hardware)):
+        if(debug_mode and (not on_hardware) and len(rect_contours) ==4):
                 cv.imshow( "D2 CROPPED IMAGE", warped_image); 
                 cv.imshow( "D1 ENCODED IMAGE", encodedImage); 
-                cv.waitKey(); 
+                cv.waitKey() 
+        if(debug_mode and (not on_hardware) and len(rect_contour_centroids) < 4 and len(rect_contour_centroids) > 1):
+                cv.imshow( "D1 ENCODED IMAGE", encodedImage); 
+                cv.waitKey()
         return encodedImage, rvec, tvec
 
 
