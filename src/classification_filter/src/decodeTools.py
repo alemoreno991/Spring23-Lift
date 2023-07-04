@@ -974,7 +974,7 @@ def findMarkerCentroid(rect_contour_centroids, rect_contour_angles, debug_mode):
                         x_intersection = y_int_difference / slope_difference
                         return (int(x_intersection), int((slopes[0]*x_intersection) + y_intercepts[0]))
 
-def determineD1Corners(image, rect_contours, rect_contour_centroids, rect_angles, debug_mode):
+def determineD1Corners(image, rect_contours, rect_contour_centroids, rect_angles, debug_mode, on_hardware = False ):
         slopes, contour_outter_vertices, d1_corner_points = [],[],[] 
         parallel_flag = False
 
@@ -1101,7 +1101,7 @@ def determineD1Corners(image, rect_contours, rect_contour_centroids, rect_angles
                                 else:
                                         d1_corner_points.append([same_slope_points[ii][jj][0] - deltaX, y2])
 
-        if debug_mode:
+        if debug_mode and (not on_hardware):
                         dt.showPointsOnImage(d1_corner_points,"CORNER POINTS ESTIMATION BASED ON 2 BARS", image)
                         cv.waitKey(0)
         return d1_corner_points

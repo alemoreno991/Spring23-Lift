@@ -69,7 +69,7 @@ def extractD1Domain(image, debug_mode, on_hardware = False):
                                         int(float(dcdc.ENCODING_CROP_RATIO)*fc_median_distance):int((1-float(dcdc.ENCODING_CROP_RATIO))*fc_median_distance) ]
    
         elif( len(rect_contour_centroids) < 4 and len(rect_contour_centroids) > 1):
-                corner_points = dcdt.determineD1Corners(image, rect_contours, rect_contour_centroids, rect_contour_angles, debug_mode)
+                corner_points = dcdt.determineD1Corners(image, rect_contours, rect_contour_centroids, rect_contour_angles, debug_mode, on_hardware)
                 if len(corner_points) == 4:
                         encodedImage,fc_median_distance,transformation_mat = dcdt.determineWarpedImageFrom4Corners(image, corner_points, debug_mode)
                 else:
