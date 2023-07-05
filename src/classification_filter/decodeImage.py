@@ -1,10 +1,19 @@
 import cv2 as cv
 import math
 import numpy as np
-from . import decodeConst as dcdc
-from . import drawingTools as dt
-from . import metrics2D as est
-from . import decodeTools as dcdt
+
+if __name__ == "__main__":
+        import utils.decodeConst as dcdc
+        import utils.drawingTools as dt
+        import utils.metrics2D as est
+        import utils.decodeTools as dcdt
+else:
+        from .utils import decodeConst as dcdc 
+        from .utils import drawingTools as dt
+        from .utils import metrics2D as est
+        from .utils import decodeTools as dcdt
+         
+        
 import time
 import sys
 

@@ -13,7 +13,7 @@ from detection_nnetwork.src.yolov7.utils.general import check_img_size, check_re
     scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path
 from detection_nnetwork.src.yolov7.utils.plots import plot_one_box
 from detection_nnetwork.src.yolov7.utils.torch_utils import select_device, time_synchronized, TracedModel
-import classification_filter.src.decodeImage as cfilter
+import classification_filter.decodeImage as cfilter
 
 
 def detectc(save_img=False):
