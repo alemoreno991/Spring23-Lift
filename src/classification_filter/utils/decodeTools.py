@@ -1098,6 +1098,11 @@ def determineD1Corners(image, rect_contours, rect_contour_centroids, rect_angles
                         # FIND SLOPE 
                         x_diff = same_slope_points[ii][1][0]-same_slope_points[ii][0][0]
                         y_diff = same_slope_points[ii][1][1]-same_slope_points[ii][0][1]
+
+                        # TODO: RESOLVE DIVIDE BY ZERO ISSUE
+                        if abs(x_diff) <= 1E-10:
+                                return []
+
                         slope = y_diff/x_diff
 
                         # FIND Y-INTERCEPT
