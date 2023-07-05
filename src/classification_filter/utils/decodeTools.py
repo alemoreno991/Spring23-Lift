@@ -94,7 +94,7 @@ def determineWarpedImageFrom4IdBars(image, rect_contour_centroids, debug_mode):
                                                           dtype = "float32" )
         
         transformationMat = cv.getPerspectiveTransform(ordered_centroids, perspective_transformed_centroids)
-        warped_image = cv.warpPerspective(image, transformationMat, (int(fc_median_distance), int(fc_median_distance)))
+        warped_image = cv.warpPerspective(image, transformationMat, (int(fc_median_distance), int(fc_median_distance)), cv.INTER_AREA )
         
         return warped_image,fc_median_distance, transformationMat
 
@@ -569,10 +569,14 @@ def determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debu
 
 def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid_indx, cid_corner_indx, debug_mode, on_hardware = False ):
         decode_image = src_atleast_grys
-        decode_blur = cv.medianBlur( decode_image, 3 )
+        #decode_blur = cv.medianBlur( decode_image, 3 )
+        decode_blur = decode_image
         row_sub_seg = int(row_seg/2)
         col_sub_seg = int(col_seg/2)
-        sub_segment_area = row_seg * col_seg/4
+        row_sub_seg_margin = int( (dcdc.SUBSEC_SIDE_EVAL_PERCENT/200)*row_sub_seg )
+        col_sub_seg_margin = int( (dcdc.SUBSEC_SIDE_EVAL_PERCENT/200)*col_sub_seg )
+        #sub_segment_area = row_seg * col_seg/4
+        eval_sub_segment_area = (row_sub_seg - 2*row_sub_seg_margin) * (col_sub_seg - 2*col_sub_seg_margin)
         indx0_img, indx1_img, indx2_img, indx3_img, indx4_img, indx5_img, indx6_img, indx7_img, indx8_img  = [], [], [], [], [], [], [], [], []
 
         pre_bit_pass = True
@@ -591,7 +595,7 @@ def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid
                                 id_bit_encoding.append(-1) 
                                 continue
 
-                        segmentSubMatrix = decode_blur[ ii*row_seg:(ii+1)*row_seg-1, jj*col_seg:(jj+1)*col_seg-1 ]
+                        segmentSubMatrix = decode_blur[ ii*row_seg:(ii+1)*row_seg, jj*col_seg:(jj+1)*col_seg ]
                         _,sSM_thresh_bin = cv.threshold( segmentSubMatrix.astype(np.uint8), 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU )
                         
                         if(debug_mode):
@@ -620,11 +624,14 @@ def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid
                         segment_id_percentw = 0.0
                         for kk in range(0,2):
                                 for ll in range(0,2):
-                                        segmentSubSubMatrix = sSM_thresh_bin[ kk*row_sub_seg:(kk+1)*row_sub_seg-1, ll*col_sub_seg:(ll+1)*col_sub_seg-1 ]
+                                        segmentSubSubMatrix = sSM_thresh_bin[ \
+                                                kk*row_sub_seg + row_sub_seg_margin:(kk+1)*row_sub_seg - row_sub_seg_margin,\
+                                                ll*col_sub_seg + col_sub_seg_margin:(ll+1)*col_sub_seg - col_sub_seg_margin\
+                                                ]
                                         if( kk*2 + ll != cid_corner_indx):
-                                                segment_percentw = segment_percentw + cv.sumElems(segmentSubSubMatrix)[0]/( 3*sub_segment_area )
+                                                segment_percentw = segment_percentw + cv.sumElems(segmentSubSubMatrix)[0]/( 3*eval_sub_segment_area )
                                         else:
-                                                segment_id_percentw = segment_id_percentw + cv.sumElems(segmentSubSubMatrix)[0]/( sub_segment_area )
+                                                segment_id_percentw = segment_id_percentw + cv.sumElems(segmentSubSubMatrix)[0]/( eval_sub_segment_area  )
                         
                         segment_percentw_vec.append( segment_percentw )
                         segment_id_percentw_vec.append( segment_id_percentw )
@@ -665,23 +672,24 @@ def evaluateV2BitEncoding( src_atleast_grys, row_seg, col_seg, segment_area, cid
                                 if( indx == cid_indx): 
                                         continue
                                 elif( indx == 0 ):
-                                        show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx0_img
+                                        show_image[ ii*row_seg:(ii+1)*row_seg , jj*col_seg:(jj+1)*col_seg ] = indx0_img
                                 elif( indx == 1 ):
-                                        show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx1_img
+                                        show_image[ ii*row_seg:(ii+1)*row_seg , jj*col_seg:(jj+1)*col_seg ] = indx1_img
                                 elif( indx == 2 ):
-                                        show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx2_img
+                                        show_image[ ii*row_seg:(ii+1)*row_seg , jj*col_seg:(jj+1)*col_seg ] = indx2_img
                                 elif( indx == 3 ):
-                                        show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx3_img
+                                        show_image[ ii*row_seg:(ii+1)*row_seg , jj*col_seg:(jj+1)*col_seg ] = indx3_img
                                 elif( indx == 4 ):
-                                        show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx4_img
+                                        show_image[ ii*row_seg:(ii+1)*row_seg , jj*col_seg:(jj+1)*col_seg ] = indx4_img
                                 elif( indx == 5 ):
-                                        show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx5_img
+                                        show_image[ ii*row_seg:(ii+1)*row_seg , jj*col_seg:(jj+1)*col_seg ] = indx5_img
                                 elif( indx == 6 ):
-                                        show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx6_img
+                                        show_image[ ii*row_seg:(ii+1)*row_seg , jj*col_seg:(jj+1)*col_seg ] = indx6_img
                                 elif( indx == 7 ):
-                                        show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx7_img
+                                        show_image[ ii*row_seg:(ii+1)*row_seg , jj*col_seg:(jj+1)*col_seg ] = indx7_img
                                 elif( indx == 8 ):
-                                        show_image[ ii*row_seg:(ii+1)*row_seg-1 , jj*col_seg:(jj+1)*col_seg-1 ] = indx8_img
+                                        show_image[ ii*row_seg:(ii+1)*row_seg , jj*col_seg:(jj+1)*col_seg ] = indx8_img
+
 
                 cv.imshow("TRAIL 1: BINARIZED D1 SEGMENTS",show_image)
                 cv.waitKey(0)
@@ -1172,7 +1180,7 @@ def determineWarpedImageFrom4Corners(image, rect_corners, debug_mode):
                                                           dtype = "float32" )
         
         transformationMat = cv.getPerspectiveTransform(ordered_centroids, perspective_transformed_centroids)
-        warped_image = cv.warpPerspective(image, transformationMat, (int(fc_median_distance), int(fc_median_distance)))
+        warped_image = cv.warpPerspective(image, transformationMat, (int(fc_median_distance), int(fc_median_distance)), cv.INTER_AREA)
         
         return warped_image,fc_median_distance, transformationMat
 

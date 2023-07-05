@@ -126,7 +126,7 @@ def determineEncodingFromD1Image( image, debug_mode, on_hardware = False):
         img_height, img_width, _ = image.shape
         row_seg = int(img_height/dcdc.ENCODING_LENGTH)
         col_seg = int(img_width/dcdc.ENCODING_LENGTH)
-        segment_area = img_height * img_width / ( dcdc.ENCODING_LENGTH * dcdc.ENCODING_LENGTH )
+        segment_area = row_seg * col_seg
 
         src_gray = cv.cvtColor( image, cv.COLOR_BGR2GRAY )
         _,src_thresh_prelim = cv.threshold( 255-src_gray, 255-dcdc.GREYSCALE_TO_255_THRESHOLD, 255, cv.THRESH_TOZERO )
