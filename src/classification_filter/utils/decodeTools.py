@@ -9,7 +9,13 @@ def determineCandidateRectIDbars( src_atleast_grys, debug_mode, on_hardware = Fa
         img_height, img_width = src_atleast_grys.shape
         rect_contours, rect_contours_pass1, rect_contour_centroids, rect_contour_angles, rect_contour_areas, poly_contour_areas = [], [], [], [], [], []
         canny_output = cv.Canny( src_atleast_grys, 10, 200, True )
-        contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_KCOS )
+        
+        contours = []
+        if dcdc.OPENCV_MAJOR_VERSION >= 4:
+                contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_KCOS )
+        else: 
+                _, contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_KCOS )
+        
         for ii in range(0,len(contours)):
                 approx_cp = cv.approxPolyDP( contours[ii], 0.025*cv.arcLength(contours[ii],True), True )
                 approx_cp_area = abs( cv.contourArea(approx_cp) )
@@ -471,7 +477,14 @@ def determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debu
                                 crnr3_img = cid_eval_SegementSubmatrix
 
                         canny_output = cv.Canny( cid_eval_SegementSubmatrix, 10, 200 )
-                        contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_L1 )
+
+                        contours = []
+                        if dcdc.OPENCV_MAJOR_VERSION >= 4:
+                                contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_L1 )
+                        else:
+                                _, contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_L1 )
+                        
+                        
                         for kk in range(0,len(contours)):
                                 approx_cp = cv.approxPolyDP( contours[kk], 0.01*cv.arcLength(contours[kk],True), True )
                                 if( len(approx_cp) > dcdc.CIRC_IDENTIFIER_SIDES_THRESHOLD  ):
