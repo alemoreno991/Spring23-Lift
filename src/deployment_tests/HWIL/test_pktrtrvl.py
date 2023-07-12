@@ -39,8 +39,9 @@ def main():
         exit(0)
 
     for ii in range(0,6):
-        packet = srl_obj.readline( )
-        packet_b = bytes.fromhex( packet )
+        packet = srl_obj.readline()
+        # packet_b = bytes.fromhex( packet )
+        packet_b = bytes(packet)
         stamp_t, hash_t, phase_t, time_t, lon_t, lat_t, wgs_t, heading_t, vel_t, pitch_t, roll_t, yaw_t, p_t, q_t, r_t, xacc_t, yacc_t, zacc_t = struct.unpack( '>fIHfIIIfffffffffff', packet_b )
         print("######################################################################")
         print("[DEBUG]: TIMESTAMP - {}".format(stamp_t))
