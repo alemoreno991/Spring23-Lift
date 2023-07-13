@@ -33,12 +33,13 @@ def main():
     
     srl_obj.open()
     if srl_obj.is_open:
-        print("[DEBUG]: SERIAL CONNECTION OPENNED. SAMPLING IN 5 SECOND INTERVALS")
+        print("[DEBUG]: SERIAL CONNECTION OPENNED. SAMPLING IN 2 SECOND INTERVALS")
     else:
         print("[DEBUG]: SERIAL CONNECTION DID NOT OPEN .. EXITING")
         exit(0)
 
     for ii in range(0,6):
+        srl_obj.flushInput()
         packet = srl_obj.readline()
         # packet_b = bytes.fromhex( packet )
         packet_b = bytes(packet)
@@ -63,7 +64,7 @@ def main():
         print("[DEBUG]: Y ACCELERATION - {}".format(yacc_t))
         print("[DEBUG]: Z ACCELERATION - {}".format(zacc_t))
         print("######################################################################")
-        time.sleep(5)
+        time.sleep(2)
 
     srl_obj.close()
     print("[RESULT]: TEST CONCLUDED ... EXITING")
