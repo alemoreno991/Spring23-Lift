@@ -4,10 +4,12 @@ import cv2 as cv
 ENCODING_VERSION = 2
 OPENCV_MAJOR_VERSION,_,_ = list( map( int, cv.__version__.split(".") ) )
 
+PERPENDICULAR_BAR_METHOD = False
+
 #// DEBUG PROPERTIES
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 DECODER_SHOWCASE_MODE = False
-DECODER_DEBUG_MODE = 3
+DECODER_DEBUG_MODE = 0
 #  0 - NONE
 #  1 - DEBUGGER MODE FOR D1 EXTRACTION
 #  2 - DEBUGGER MODE FOR ENCODING DETERMINATION
@@ -58,18 +60,20 @@ REL_RECT_SIZE_PERCENT_THRESH = 10
 RECT_CUTOFF_SIZE = 7
 
 CONTOUR_EDIST_PERCENT_THRES = 7.5
- 
 RECT_MINIMUM_SCREEN_PERCENTAGE = .1
 RECT_BOUNDING_CONTOUR_AREA_THRESHOLD = 30
 RECT_UPPER_COMPARISON_PERCENT_ERROR_THRESHOLD = 30
 RECT_LOWER_COMPARISON_PERCENT_ERROR_THRESHOLD = 30
 
-RECT_PARALLEL_ANGLE_THRESH = 30
+RECT_PARALLEL_ANGLE_THRESH = 30 # 30 Degrees
+PERPENDICULAR_ANGLE_THRESH = 0.34202014332 # COS 70 degrees
 RECT_CENTROID_DISTANCE_THRESHOLD = 20
 
-RECT_INSIDE_DISTANCE_THRESHOLD = 20
+RECT_INSIDE_DISTANCE_THRESHOLD = 40 # LARGER = SMALLER SEARCH AREA
 
 SUBSEC_SIDE_EVAL_PERCENT = 70
+
+INNER_CONTOUR_NUM_POINTS = 6
 
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 CIRC_AREA_LOWER_PERCENT_THRESHOLD = 30
