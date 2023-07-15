@@ -4,12 +4,12 @@ import cv2 as cv
 ENCODING_VERSION = 2
 OPENCV_MAJOR_VERSION,_,_ = list( map( int, cv.__version__.split(".") ) )
 
-PERPENDICULAR_BAR_METHOD = False
+PERPENDICULAR_BAR_METHOD = True
 
 #// DEBUG PROPERTIES
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 DECODER_SHOWCASE_MODE = False
-DECODER_DEBUG_MODE = 0
+DECODER_DEBUG_MODE = 3
 #  0 - NONE
 #  1 - DEBUGGER MODE FOR D1 EXTRACTION
 #  2 - DEBUGGER MODE FOR ENCODING DETERMINATION

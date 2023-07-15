@@ -1363,9 +1363,9 @@ def determineMostPerpendicular(points, image):
                         angle2 = est.angleBetweenPoints(points[ii][0], points[ii-1][0])
                 #CONVERT INTO POSITIVE ANGLE 
                 if angle1 < 0:
-                        angle1 += math.pi
+                        angle1 += math.pi * 2 
                 if angle2 < 0:
-                        angle2 += math.pi
+                        angle2 += math.pi * 2
                 difference = abs(angle1-angle2)
                 cos_result = abs(math.cos(difference))
                 if cos_result < dcdc.PERPENDICULAR_ANGLE_THRESH and cos_result <= smallest_cos_result:
@@ -1386,9 +1386,9 @@ def determineMostPerpendicular(points, image):
                         angle2 = est.angleBetweenPoints(points[smalles_cos_point][0], points[smalles_cos_point-1][0])
                 #CONVERT INTO POSITIVE ANGLE 
                 if angle1 < 0:
-                        angle1 += math.pi
+                        angle1 += math.pi * 2
                 if angle2 < 0:
-                        angle2 += math.pi 
+                        angle2 += math.pi * 2
 
                 return angle1,angle2
 
