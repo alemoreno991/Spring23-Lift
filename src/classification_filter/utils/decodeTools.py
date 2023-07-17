@@ -905,6 +905,20 @@ def readMappedEncoding( cid_indx, pre_bit_encoding ):
 
 
 def determinePose(transformation_mat, fc_median_distance, circle_indx):
+        """Find Marker Pose 
+
+                Return marker pose relative to camera
+
+                Args:
+                        transformation_mat (numpy.ndarray):     3x3 transformation matrix used to gather warped image
+                        fc_median_distance (float):             Distance from top left point to fc_median_indx. Also warped image w and h
+                        circle_indx:                            Index of circle in warped image to determine marker rotation                                           
+
+
+                Returns:
+                        rvec (float):                           Rotation vector
+                        tvec (float):                           Translation vector                                
+        """
         ## TODO IMPROVE CIRCLE INDEX DETERMINATION
 
         inv_perspective_matrix = np.linalg.inv(transformation_mat)
@@ -957,14 +971,26 @@ def determinePose(transformation_mat, fc_median_distance, circle_indx):
 
 
 def findMarkerCentroid(rect_contour_centroids, rect_contour_angles, debug_mode):
+        """Find Marker Centroid
+
+                Return marker centroid given at least 2 rectangular bar contours
+
+                Args:
+                        rect_contour_centroids (list):          List containing contour centroids [[x1 (float) ,y1( float)],...]
+                        rect_contour_angles (list):             List containing angle corresponding to minRecArea rectangular centroid angle (float)
+                        debug_mode (int):                       Toggle debug outputs                             
+
+                Returns:
+                        marker_centroid (tuple):                Marker Centroid x and y coordinates as integers.                
+        """
         if len(rect_contour_centroids) == 4:
                 avg_x, avg_y, total_x, total_y,  = 0,0,0,0
                 #FIND CENTROID AVG
-                for ii in range(0,len(rect_contour_centroids)):
+                for ii in range(0,4):
                         total_x += rect_contour_centroids[ii][0] 
                         total_y += rect_contour_centroids[ii][1] 
-                avg_x = total_x / len(rect_contour_centroids)
-                avg_y = total_y / len(rect_contour_centroids)
+                avg_x = total_x / 4
+                avg_y = total_y / 4
                 return (avg_x,avg_y)
         elif len(rect_contour_centroids) == 3 or len(rect_contour_centroids) == 2:
                 parallel_flag = False
@@ -992,10 +1018,29 @@ def findMarkerCentroid(rect_contour_centroids, rect_contour_angles, debug_mode):
                         # x1 = b2-b1 / m1-m2
                         y_int_difference = y_intercepts[1] - y_intercepts[0]
                         slope_difference = slopes[0] - slopes[1]
+                        if abs(slope_difference) <= 1E-10:
+                                return -1
                         x_intersection = y_int_difference / slope_difference
                         return (int(x_intersection), int((slopes[0]*x_intersection) + y_intercepts[0]))
 
-def determineD1Corners(image, rect_contours, rect_contour_centroids, rect_angles, debug_mode, on_hardware = False ):
+def determineD1Corners(image, rect_contours, rect_contour_centroids, rect_angles, debug_mode, on_hardware = False):
+        """Determine D1 Corners
+
+                Return 4 estimated corners based on identified rectangular bars. Uses paralle bar method when two parallel bars are inputted or 3 bars. Uses
+                perpendicular bar method when two orthogonal bars are located. Parallel bar method is more accurate, so you can toggle orthogonal bar method. 
+
+                Args:
+                        image (Mat):                            Gray image with blur that contains rect bars.     
+                        rect_contours (list):                   List containing contours (dtype=int32)
+                        rect_contour_centroids (list):          List containing contour centroids (float)
+                        rect_contour_angles (list):             List containing angle corresponding to minRecArea rectangular centroid angle (float)
+                        debug_mode (int):                       Toggle debug outputs  
+                        on_hardware (bool):                     Do not output debug if on_hardware = True
+                   
+
+                Returns:
+                        d1_corner_points (list)                 List containing 4 estimated d1 corner points [[x1 (float),y1 (float)], ... , [x4,y4]]
+        """
         slopes, contour_outter_vertices, d1_corner_points = [],[],[] 
         parallel_flag = False
 
@@ -1020,6 +1065,10 @@ def determineD1Corners(image, rect_contours, rect_contour_centroids, rect_angles
 
         ############################################################# COLLECT RECT CONTOURS OUTTER VERTICES - START
         marker_centroid = findMarkerCentroid(rect_contour_centroids, rect_angles, debug_mode)
+        if marker_centroid == -1:
+                if debug_mode and (not on_hardware):
+                        print("[RESULT]: COULD NOT FIND MARKER CENTROID")
+                return []
         for ii in range (0,2): # FOR EACH RECT CONTOUR
                 vertices_pairs = [] 
                 rect = cv.minAreaRect(rect_contours[ii])
@@ -1046,39 +1095,88 @@ def determineD1Corners(image, rect_contours, rect_contour_centroids, rect_angles
                         else:
                                 outter_vertices.append(vertices_pairs[jj][1])
                 contour_outter_vertices.append(outter_vertices)
+        if debug_mode and (not on_hardware):
+                points = []
+                for ii in range(0,2):
+                        points.append(contour_outter_vertices[ii][0])
+                        points.append(contour_outter_vertices[ii][1])
+                dt.showPointsOnImage(points,"outter points)", image)
+                cv.waitKey(0)
+                                             
 
         # COLLECT RECT CONTOURS OUTTER VERTICES - END 
 
-        if parallel_flag ==  False:
-                # TODO NEEDS IMPROVEMENT - SLOPES GOTTEN USING minAreaRec ARE INNACURATE
-                # rect_contours_y_int = []
-                # for ii in range (0, 2): # for each contour
-
-                #         # GET PERPENDICULAR SLOPE
-                #         rect_angles[ii] += 90
-                #         slopes.append(math.tan(math.radians(rect_angles[ii])))
-                #         # GET Y INTERCEPT
-                #         y_intercepts = []
-                #         for jj in range(0,2): 
-                #                 #  y-mx = b
-                #                 y_intercepts.append(contour_outter_vertices[ii][jj][1] - (slopes[ii] * contour_outter_vertices[ii][jj][0]))
-                #         rect_contours_y_int.append(y_intercepts)
-
-                # for ii in range (0,2): # FOR EACH POINT IN CONTOUR1
-                #         for jj in range (0,2): # FOR EACH POINT IN CONTOUR2
-                #                 # m1x1 + b1 = m2x2 + b2
-                #                 # m1x1 - m2x2 = b2- b1
-                #                 # x1(m1-m2) = b2 - b1
-                #                 # x1 = b2-b1 / m1-m2
-                #                 y_int_difference = rect_contours_y_int[1][jj] - rect_contours_y_int[0][ii]
-                #                 slope_difference = slopes[0] - slopes[1]
-                #                 x_intersection = y_int_difference / slope_difference
-                #                 # y = mx + b
-                #                 d1_corner_points.append( (int(x_intersection), int((slopes[0]*x_intersection) + rect_contours_y_int[0][ii])))
-                print(" [ERROR] ORTHOGONAL POSE AND WARPING CURRENTLY NOT FUNCTIONING")
-                return []
-        else:
+        if parallel_flag ==  False and dcdc.PERPENDICULAR_BAR_METHOD == True:
+                # TODO NEEDS IMPROVEMENT - Try minRectArea around contours and then slopes estimation using convex hull around those
+                # BOUDING INSIDE RECTANGLES 
+                inside_contours =  insideContours(image,rect_contours,rect_contour_centroids,rect_angles, debug_mode)
+                if len(inside_contours) == 0:
+                                print("[RESULT]: NO INSIDE CONTOURS FOUND")
+                                return []
+                if debug_mode and (not on_hardware):
+                        dt.showContours(inside_contours, "INSIDE CONTOURS", image.shape)
+                        cv.waitKey(0)
+                bounded_encoding = cv.convexHull(np.concatenate(inside_contours))
+     
+                # SIMPLIFY INSIDE CONTOURS - START
+                cp = len(bounded_encoding)
+                for eps in np.linspace(0.001, 7, 30):
+                        temp_bounded_encoding = []
+                        peri = 0.025*cv.arcLength(bounded_encoding,True)
+                        temp_bounded_encoding = cv.approxPolyDP(bounded_encoding, eps * peri, True)
+                        cp = len(temp_bounded_encoding)
+                        if cp <= dcdc.INNER_CONTOUR_NUM_POINTS:
+                                bounded_encoding = temp_bounded_encoding
+                                break
+                # SIMPLIFY INSIDE CONTOURS - END        
                 
+                angle1, angle2 = 0, 0
+                bounded_encoding_angles = []
+                bounded_encoding_angles = determineMostPerpendicular(bounded_encoding, image)
+                if len(bounded_encoding_angles) == 0:
+                        if debug_mode:
+                                print("[RESULT]: COULD NOT DETERMINE MOST PERPENDICULAR POINT")
+                        return []
+
+                rect_contours_y_int = []
+                for ii in range(0, 2): # for each contour
+
+                        # GET BAR PERPENDICULAR SLOPE
+                        rect_angles[ii] += 90
+                        # ANGLE CORRECTION 
+
+                        for jj in range(0, len(bounded_encoding_angles)):
+                                
+                                if determineIfParallel(rect_angles[ii], math.degrees(bounded_encoding_angles[jj])) == True:
+                                        slopes.append(math.tan(bounded_encoding_angles[jj]))
+                        if not len(slopes) == 2 and ii==1:
+                                if debug_mode:
+                                        print("[RESULT]: ANGLE CORRECTION FAILED")
+                                return []
+
+                        # GET Y INTERCEPT
+                        y_intercepts = []
+                        for jj in range(0,2): 
+                                #  y-mx = b
+                                y_intercepts.append(contour_outter_vertices[ii][jj][1] - (slopes[ii] * contour_outter_vertices[ii][jj][0]))
+                        rect_contours_y_int.append(y_intercepts)
+
+                
+                for ii in range (0,2): # FOR EACH POINT IN CONTOUR1
+                        for jj in range (0,2): # FOR EACH POINT IN CONTOUR2
+                                # m1x1 + b1 = m2x2 + b2
+                                # m1x1 - m2x2 = b2- b1
+                                # x1(m1-m2) = b2 - b1
+                                # x1 = b2-b1 / m1-m2
+                                y_int_difference = rect_contours_y_int[1][jj] - rect_contours_y_int[0][ii]
+                                slope_difference = slopes[0] - slopes[1]
+                                if abs(slope_difference) <= 1E-10:
+                                        print("[RESULT]: COULD NOT DETERMINE D1 - SLOPE DIFFERENCE IS CLOSE TO")
+                                        return []
+                                x_intersection = y_int_difference / slope_difference
+                                # y = mx + b
+                                d1_corner_points.append( (int(x_intersection), int((slopes[0]*x_intersection) + rect_contours_y_int[0][ii])))
+        elif parallel_flag == True:
                 ################################################################################# PAIR POINTS THAT WILL LIE ON THE SAME LINE - START
                 same_slope_points = []
                 for ii in range (0,2): 
@@ -1126,21 +1224,37 @@ def determineD1Corners(image, rect_contours, rect_contour_centroids, rect_angles
                                         d1_corner_points.append([same_slope_points[ii][jj][0] + deltaX, y1])
                                 else:
                                         d1_corner_points.append([same_slope_points[ii][jj][0] - deltaX, y2])
-
+        else:
+                return []
         if debug_mode and (not on_hardware):
+                        if parallel_flag ==  False and dcdc.PERPENDICULAR_BAR_METHOD == True:
+                                dt.showContoursOnImage([bounded_encoding], "CORNER POINTS ESTIMATION BASED ON 2 BARS", image)
                         dt.showPointsOnImage(d1_corner_points,"CORNER POINTS ESTIMATION BASED ON 2 BARS", image)
                         cv.waitKey(0)
         return d1_corner_points
                         
 
 
-def determineWarpedImageFrom4Corners(image, rect_corners, debug_mode):
+def determineWarpedImageFrom4Corners(image, rect_corners:list, debug_mode:int):
+        """Warp Image Given 4 Corner Points
+
+                Return D1 given 4 estimated corners
+
+                Args:
+                        image (Mat):                            Image where that was used to estimate the 4 corner points    
+                        rect_corners (list):                    List of 4 cartesian coordinates [[x1(int),y1(int)], ... ,[x4,y4]]
+                        debug_mode (int):                       Toggle debug outputs                             
+
+                Returns:
+                        warped_image (Mat):                     Warped image gotten from the four rect_corners
+                        fc_median_distance (float):             Distance from top left point to fc_median_indx. Also warped image w and h
+                        transformation_mat (numpy.ndarray):     Matrix containing transformation used to attain warped image
+
+        """
         fc_relative_angles = []
         quadrant0_flag = False
         quadrant3_flag = False
-        print(len(rect_corners))
         for ii in range(1,4):
-                print(ii)
                 anglei = est.angleBetweenPoints(rect_corners[0],rect_corners[ii])
                 if( est.determineAngleQuadrant(anglei) == 0 ):
                         quadrant0_flag = True
@@ -1173,7 +1287,6 @@ def determineWarpedImageFrom4Corners(image, rect_corners, debug_mode):
         for ii in range(2,4):
             if( ii != fc_ra_min_indx and ii != fc_ra_max_indx ):
                 fc_median_indx = ii
-        
         fc_median_distance =  est.euclideanDistance( rect_corners[0],rect_corners[fc_median_indx])
 
         ordered_centroids = np.array( [ [ rect_corners[0], rect_corners[fc_ra_min_indx], \
@@ -1186,23 +1299,141 @@ def determineWarpedImageFrom4Corners(image, rect_corners, debug_mode):
         
         transformationMat = cv.getPerspectiveTransform(ordered_centroids, perspective_transformed_centroids)
         warped_image = cv.warpPerspective(image, transformationMat, (int(fc_median_distance), int(fc_median_distance)), cv.INTER_AREA)
-        
         return warped_image,fc_median_distance, transformationMat
 
-def determineIfParallel(rect_contour_angle1, rect_contour_angle2):
+def determineIfParallel(angle1:float, angle2:float, radians = False) -> bool:
+        """Determine if two angles are parallel
+
+                Return true if lines are within a threshold angle and are considered parallel
+
+                Args:
+                        angle1 (float):                 Angle in radians    
+                        angle2 (float):                 Angle in radians
+                        mode   (string):                Toggle beween radian and degree input. Default is degrees
+
+                Returns:
+                        bool:                           True if parallel
+        """
         #CONVERT INTO POSITIVE ANGLE THAT IS LESS THAN 180 DEGREES 
-        if rect_contour_angle1 < 0:
-                rect_contour_angle1 +=360
-        if rect_contour_angle1 >= 180:
-                rect_contour_angle1 -=180
-        if rect_contour_angle2 < 0:
-                rect_contour_angle2 +=360
-        if rect_contour_angle2 >= 180:
-                rect_contour_angle2 -=180        
+        if radians == True:
+                angle1 = math.degrees(angle1)
+                angle2 = math.degrees(angle2)
+        if angle1 < 0:
+                angle1 +=360
+        if angle1 >= 180:
+                angle1 -=180
+        if angle2 < 0:
+                angle2 +=360
+        if angle2 >= 180:
+                angle2 -=180        
        
-        difference = abs(rect_contour_angle1-rect_contour_angle2)
+        difference = abs(angle1-angle2)
         #IF DIFFERENCE IS CLOSE TO 180 OR CLOSE TO 0 THEN PASS
         if (difference <= dcdc.RECT_PARALLEL_ANGLE_THRESH or difference > 180 - dcdc.RECT_PARALLEL_ANGLE_THRESH): 
                 return True
         else:
                 return False
+
+def determineMostPerpendicular(points, image):
+        """Return Angles of Perpendicular Interection
+
+                Return angles that correspond to a contours closest to perpendicular lines. 
+
+                Args:
+                        points (numpy.ndarray):         Contour of interest (D1 region simplified convex hull)
+                        image (Mat):                    Image to use for debugging
+
+                Returns:
+                        angle1 (float):                 Angle in radians that corresponds to the first line of the perpendicular intersection
+                        angle2 (float):                 Angle in radians that corresponds to the first line of the perpendicular intersection
+        """
+        smallest_cos_result = 1
+        smalles_cos_point = 0
+
+        for ii in range(0, len(points)):
+
+                if ii == 0:
+                        angle1 = est.angleBetweenPoints(points[0][0], points[1][0])
+                        angle2 = est.angleBetweenPoints(points[0][0], points[-1][0])
+                elif ii == len(points)-1:
+                        angle1 = est.angleBetweenPoints(points[ii][0], points[0][0])
+                        angle2 = est.angleBetweenPoints(points[ii][0], points[ii-1][0])
+                else:
+                        angle1 = est.angleBetweenPoints(points[ii][0], points[ii+1][0])
+                        angle2 = est.angleBetweenPoints(points[ii][0], points[ii-1][0])
+                #CONVERT INTO POSITIVE ANGLE 
+                if angle1 < 0:
+                        angle1 += math.pi * 2 
+                if angle2 < 0:
+                        angle2 += math.pi * 2
+                difference = abs(angle1-angle2)
+                cos_result = abs(math.cos(difference))
+                if cos_result < dcdc.PERPENDICULAR_ANGLE_THRESH and cos_result <= smallest_cos_result:
+                        
+                        smallest_cos_result = cos_result
+                        smalles_cos_point = ii
+        if smallest_cos_result == 1:
+                return []
+        else:
+                if smalles_cos_point == 0:
+                        angle1 = est.angleBetweenPoints(points[0][0], points[1][0])
+                        angle2 = est.angleBetweenPoints(points[0][0], points[-1][0])
+                elif smalles_cos_point == len(points)-1:
+                        angle1 = est.angleBetweenPoints(points[smalles_cos_point][0], points[0][0])
+                        angle2 = est.angleBetweenPoints(points[smalles_cos_point][0], points[smalles_cos_point-1][0])
+                else:
+                        angle1 = est.angleBetweenPoints(points[smalles_cos_point][0], points[smalles_cos_point+1][0])
+                        angle2 = est.angleBetweenPoints(points[smalles_cos_point][0], points[smalles_cos_point-1][0])
+                #CONVERT INTO POSITIVE ANGLE 
+                if angle1 < 0:
+                        angle1 += math.pi * 2
+                if angle2 < 0:
+                        angle2 += math.pi * 2
+
+                return angle1,angle2
+
+        
+def insideContours(src_atleast_grys,rect_contours,rect_contour_centroids,rect_contour_angles, debug_mode):
+        """ Find D1 Contours
+
+                Return a list of contours within the region D1. This is done by bundling together contour with centroids a set distance away from marker center. 
+
+                Args:
+                        src_atleast_grys (Mat):         Gray and blurred image containing marker
+                        rect_contours (list):           List containing rectangular bar contours (dtype=int32)
+                        rect_contour_centroids (list):  List containing rectangular bar contour centroids [[x1(float),y1(float),...]]
+                        rect_contour_angles (list):     List containing angle corresponding to minRecArea rectangular bar centroid angle (float)
+                        debug_mode (int):               Toggle debug outputs  
+
+                Returns:
+                        inside_contours (list):         List of contours located within D1 area or a threshold distance from marker center        
+        
+        """
+        marker_centroid = findMarkerCentroid(rect_contour_centroids, rect_contour_angles, debug_mode)
+        if marker_centroid == -1:
+                return []
+        img_height, img_width = src_atleast_grys.shape
+        canny_output = cv.Canny( src_atleast_grys, 10, 200, True )
+        if dcdc.OPENCV_MAJOR_VERSION >= 4:
+                contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_KCOS )
+        else: 
+                _, contours, _ = cv.findContours( canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_TC89_KCOS )
+        
+        dist_total,avg_dist_from_marker_centroid = 0, 0
+        for ii in range(0,len(rect_contours)):
+                        dist_total = dist_total + est.euclideanDistance(rect_contour_centroids[ii] , marker_centroid)
+                        avg_dist_from_marker_centroid = dist_total / len(rect_contours)
+
+        #IF MOMENT IS OUTSIDE OF SPECIFIED DISTANCE THEN ELIMINATE IT. ALSO ELIMINATE IF IT IS TOO LARGE. PREVENTS LARGE CONTOURS WHOSE CENTROID WILL BE AT CENTER
+        # TODO MAKE SIZE THRESHOLD 
+        inside_contours = []
+        _,rect_contour_size, _ = cv.minAreaRect(rect_contours[0])
+        rect_area = rect_contour_size[0]*rect_contour_size[1]
+        for ii in range(0,len(contours)):
+                contour_center, contour_size, contour_angle = cv.minAreaRect(contours[ii])
+
+                if (est.euclideanDistance(contour_center,marker_centroid) <=  (avg_dist_from_marker_centroid * (1 - float(dcdc.RECT_INSIDE_DISTANCE_THRESHOLD/100))) \
+                        and (contour_size[0]*contour_size[1]) < (rect_area * 4)):
+                        inside_contours.append( contours[ii] )
+        
+        return inside_contours      

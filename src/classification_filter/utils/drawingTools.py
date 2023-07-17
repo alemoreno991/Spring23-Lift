@@ -131,5 +131,18 @@ def showPointsOnImage(points,title:str, image):
     drawing = image
     for ii in range (0, len(points)):
         color = ( int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)) )
-        cv.circle( drawing, (int(points[ii][0]) , int(points[ii][1])) , 3, color, 3 )
+        cv.circle( drawing, (int(points[ii][0]) , int(points[ii][1])) , 10, color, 3 )
     cv.imshow( title, drawing )
+
+def showContoursAndBoundingRect( contours, rect, title:str, imageref ):
+    drawing = np.zeros( imageref, dtype=np.uint8)
+    center,size,_ = rect
+    rect_vertices = cv.boxPoints(rect)
+    rect_vertices = np.int0(rect_vertices)
+    # Draw the bounding rectangle on the image
+    cv.polylines(drawing, [rect_vertices], True, (255, 255, 0), 2)
+    for ii in range(0,len(contours)): 
+        color = ( int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)), int(rnd.randrange(0,255,1)) )
+        cv.drawContours( drawing, [contours[ii]], 0, color, 3 )
+    cv.imshow( title, drawing ) 
+
