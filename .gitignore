@@ -185,7 +185,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-/.vscode
+.vscode
 .DS_Store
 
 **/customize_yolo/data/test/
