@@ -200,4 +200,5 @@ events.out*
 **/customize_yolo/**/opt.yaml
 *.mp4
 *.png
+*_temp.py
 traced_model.pt
