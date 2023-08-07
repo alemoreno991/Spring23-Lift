@@ -27,7 +27,10 @@ def main():
 
 
 def rtrv_gs_cnct():
-    gspline = 'udpsrc port={} caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! nvv4l2decoder ! videoconvert ! appsink'.format(dplyC.NTWRK_RTRVL_PORT)
+    # gspline = 'udpsrc port={} caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! nvv4l2decoder ! videoconvert ! appsink'.format(dplyC.NTWRK_RTRVL_PORT)
+    # gspline = 'udpsrc port={} ! tsdemux ! queue ! h264parse ! avdec_h264  ! videoconvert ! appsink'.format(dplyC.NTWRK_RTRVL_PORT)
+    gspline = 'udpsrc port={} ! tsdemux ! queue ! h264parse ! nvv4l2decoder ! videoconvert ! appsink'.format(dplyC.NTWRK_RTRVL_PORT)
+
     gscap = cv.VideoCapture( gspline, cv.CAP_GSTREAMER )
     return gscap
 
