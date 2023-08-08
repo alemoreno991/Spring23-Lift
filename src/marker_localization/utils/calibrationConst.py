@@ -1,4 +1,3 @@
-import numpy as np
 import math
 
 WGS84_SEMI_MAJOR_A = 6378137. # METERS

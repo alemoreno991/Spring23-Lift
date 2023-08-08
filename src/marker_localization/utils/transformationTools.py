@@ -1,6 +1,6 @@
-from . import calibrationConst as cc
 import numpy as np
 import math
+from . import calibrationConst as clbc
 
 def zDCM(rotz):
     return np.array(    [\
@@ -37,22 +37,22 @@ def llaWGS84_to_ecef( lla ):
     lon_rad = math.radians( lon ) # TO RADIANS
     alt = lla[2]
 
-    pvroc = cc.WGS84_SEMI_MAJOR_A/math.sqrt( 1 - math.pow( cc.WGS84_ECCNTRCTY*math.sin( lat_rad ), 2 ) )
+    pvroc = clbc.WGS84_SEMI_MAJOR_A/math.sqrt( 1 - math.pow( clbc.WGS84_ECCNTRCTY*math.sin( lat_rad ), 2 ) )
 
     x_ecef = ( pvroc + alt ) * math.cos( lat_rad ) * math.cos( lon_rad )
     y_ecef = ( pvroc + alt ) * math.cos( lat_rad ) * math.sin( lon_rad )
-    z_ecef = ( ( 1 - math.pow( cc.WGS84_ECCNTRCTY, 2 ) )*pvroc + alt ) * math.sin( lat_rad )
+    z_ecef = ( ( 1 - math.pow( clbc.WGS84_ECCNTRCTY, 2 ) )*pvroc + alt ) * math.sin( lat_rad )
 
     return np.array( [ [x_ecef], [y_ecef], [z_ecef] ] )
 
 
-ENUREF_WGS84_LAT_RAD = math.radians( cc.ENUREF_WGS84_LAT ) # RADIANS
-ENUREF_WGS84_LON_RAD = math.radians( cc.ENUREF_WGS84_LON ) # RADIANS
+ENUREF_WGS84_LAT_RAD = math.radians( clbc.ENUREF_WGS84_LAT ) # RADIANS
+ENUREF_WGS84_LON_RAD = math.radians( clbc.ENUREF_WGS84_LON ) # RADIANS
 ECEF2LOCALENU_DCM = np.array(  [  [             -math.sin(ENUREF_WGS84_LON_RAD)               ,                   math.cos(ENUREF_WGS84_LON_RAD)          ,            0               ], \
                                   [ -math.sin(ENUREF_WGS84_LAT_RAD)*math.cos(ENUREF_WGS84_LON_RAD), -math.sin(ENUREF_WGS84_LAT_RAD)*math.sin(ENUREF_WGS84_LON_RAD), math.cos(ENUREF_WGS84_LAT_RAD) ], \
                                   [  math.cos(ENUREF_WGS84_LAT_RAD)*math.cos(ENUREF_WGS84_LON_RAD),  math.cos(ENUREF_WGS84_LAT_RAD)*math.sin(ENUREF_WGS84_LON_RAD), math.sin(ENUREF_WGS84_LAT_RAD) ]  \
                                 ] )
-ENUREF_ECEF = llaWGS84_to_ecef( np.array( [ [cc.ENUREF_WGS84_LAT],[cc.ENUREF_WGS84_LON],[cc.ENUREF_WGS84_ALT] ] ) )
+ENUREF_ECEF = llaWGS84_to_ecef( np.array( [ [clbc.ENUREF_WGS84_LAT],[clbc.ENUREF_WGS84_LON],[clbc.ENUREF_WGS84_ALT] ] ) )
 
 def ecef_to_lenu( pt_ecef ):
     # DETERMINE POINT IN LOCAL FIXED ENU FRAME
