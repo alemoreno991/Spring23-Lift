@@ -5,9 +5,9 @@ import struct
 import time
 
 TEST_INIT = False
-UI16_PACKET_SIZE = 4
-UI32_PACKET_SIZE = 4 
-F32_PACKET_SIZE = 4
+UI16_PACKET_SIZE = 0
+UI32_PACKET_SIZE = 0 
+F32_PACKET_SIZE = 20
 
 topic = "test_topic".encode('ascii')
 print("Reading messages with topic: {}".format(topic))
@@ -38,11 +38,11 @@ with zmq.Context() as context:
                 print("\tpacket size: {:d}".format(packet_size))
                 struct_format = "{:d}h".format(packet_size)
             else:
-                struct_format = "{:d}H{:d}I{:d}f".format( UI16_PACKET_SIZE, UI32_PACKET_SIZE, F32_PACKET_SIZE )
+                struct_format = "20f"
 
             data = struct.unpack(struct_format, data_buffer)
             print("\tdata: {}".format(data))
-            #time.sleep(5)
+            time.sleep(2)
             i += 1
 
     except KeyboardInterrupt:
