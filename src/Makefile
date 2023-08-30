@@ -34,11 +34,14 @@ test_on_item:
 		--conf 0.75 \
 		--project $(CUSTOM_YOLO_DIR)/runs/detect
 
-test_composite_on_item:
-	python3 detectc.py --weights $(WEIGHTS_CUSTOM) \
-		--source $(TEST_ITEM) \
-		--conf 0.75 \
-		--project $(CUSTOM_YOLO_DIR)/runs/detectc
+# test_composite_on_item:
+# 	python3 detectc.py --weights $(WEIGHTS_CUSTOM) \
+# 		--source $(TEST_ITEM) \
+# 		--conf 0.75 \
+# 		--project $(CUSTOM_YOLO_DIR)/runs/detectc
+
+test_misc_detect:
+	python3 test_temp.py --weights $(WEIGHTS_CUSTOM)
 
 train:
 	cd $(YOLO_DIR) && \

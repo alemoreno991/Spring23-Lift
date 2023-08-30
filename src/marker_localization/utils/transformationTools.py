@@ -46,17 +46,17 @@ def llaWGS84_to_ecef( lla ):
     return np.array( [ [x_ecef], [y_ecef], [z_ecef] ] )
 
 
-ENUREF_WGS84_LAT_RAD = math.radians( clbc.ENUREF_WGS84_LAT ) # RADIANS
-ENUREF_WGS84_LON_RAD = math.radians( clbc.ENUREF_WGS84_LON ) # RADIANS
-ECEF2LOCALENU_DCM = np.array(  [  [             -math.sin(ENUREF_WGS84_LON_RAD)               ,                   math.cos(ENUREF_WGS84_LON_RAD)          ,            0               ], \
-                                  [ -math.sin(ENUREF_WGS84_LAT_RAD)*math.cos(ENUREF_WGS84_LON_RAD), -math.sin(ENUREF_WGS84_LAT_RAD)*math.sin(ENUREF_WGS84_LON_RAD), math.cos(ENUREF_WGS84_LAT_RAD) ], \
-                                  [  math.cos(ENUREF_WGS84_LAT_RAD)*math.cos(ENUREF_WGS84_LON_RAD),  math.cos(ENUREF_WGS84_LAT_RAD)*math.sin(ENUREF_WGS84_LON_RAD), math.sin(ENUREF_WGS84_LAT_RAD) ]  \
+ECEFREF_WGS84_LAT_RAD = math.radians( clbc.ECEFREF_WGS84_LAT ) # RADIANS
+ECEFREF_WGS84_LON_RAD = math.radians( clbc.ECEFREF_WGS84_LON ) # RADIANS
+ECEF2LOCALENU_DCM = np.array(  [  [             -math.sin(ECEFREF_WGS84_LON_RAD)               ,                   math.cos(ECEFREF_WGS84_LON_RAD)          ,            0               ], \
+                                  [ -math.sin(ECEFREF_WGS84_LAT_RAD)*math.cos(ECEFREF_WGS84_LON_RAD), -math.sin(ECEFREF_WGS84_LAT_RAD)*math.sin(ECEFREF_WGS84_LON_RAD), math.cos(ECEFREF_WGS84_LAT_RAD) ], \
+                                  [  math.cos(ECEFREF_WGS84_LAT_RAD)*math.cos(ECEFREF_WGS84_LON_RAD),  math.cos(ECEFREF_WGS84_LAT_RAD)*math.sin(ECEFREF_WGS84_LON_RAD), math.sin(ECEFREF_WGS84_LAT_RAD) ]  \
                                 ] )
-ENUREF_ECEF = llaWGS84_to_ecef( np.array( [ [clbc.ENUREF_WGS84_LAT],[clbc.ENUREF_WGS84_LON],[clbc.ENUREF_WGS84_ALT] ] ) )
+ECEFREF_ECEF = llaWGS84_to_ecef( np.array( [ [clbc.ECEFREF_WGS84_LAT],[clbc.ECEFREF_WGS84_LON],[clbc.ECEFREF_WGS84_ALT] ] ) )
 
 def ecef_to_lenu( pt_ecef ):
     # DETERMINE POINT IN LOCAL FIXED ENU FRAME
-    xyz_localenu = ECEF2LOCALENU_DCM * ( pt_ecef - ENUREF_ECEF )
+    xyz_localenu = ECEF2LOCALENU_DCM * ( pt_ecef - ECEFREF_ECEF )
     return xyz_localenu
 
 
