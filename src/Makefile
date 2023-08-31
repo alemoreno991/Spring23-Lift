@@ -48,3 +48,10 @@ train:
 	python train.py --workers 1 --device 0 --batch-size 2 \
 	--epochs $(EPOCHS) --img $(IMG_SIZE) --data $(DATA_CONFIG) --hyp $(HYP_CONFIG) \
 	--cfg $(CFG_CONFIG) --project $(PROJ_DIR) --name $(NAME) --weights $(WEIGHTS)
+
+
+compile_veronte_comm:
+	g++ -I./include veronteCommServer.cpp -o tele_server -pthread -lzmq
+
+run_identification:
+	python3 runIdentification.py --weights $(WEIGHTS_CUSTOM)

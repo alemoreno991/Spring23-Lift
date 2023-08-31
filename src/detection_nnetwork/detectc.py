@@ -31,7 +31,7 @@ class detectionNetwork:
     # CONSTRUCTOR (LOAD MODEL)
     def __init__(self, weights = dctc.WEIGHTS):
         # logging
-        # set_logging()
+        set_logging()
 
         # Initialize
         self.trace, self.device, self.view_img, self.imgsz, self.save_img, self.save_txt = not dctc.NO_TRACE, select_device(dctc.DEVICE), dctc.VIEW_IMAGE, dctc.IMG_SIZE, not dctc.NOSAVE, dctc.SAVE_TXT
