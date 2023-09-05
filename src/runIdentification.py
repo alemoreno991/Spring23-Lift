@@ -75,7 +75,15 @@ def runIdentifiaction_hwil():
 
                 # CLASSIFY MARKERS IN IMAGE
                 for bbcrnr in bbcrnrs_list:
-                    read_code = cfilter.decodeImageSection(imgi,bbcrnr,0,True)
+                    
+                    read_code = []
+                    try:
+                        read_code = cfilter.decodeImageSection(imgi,bbcrnr,0,True)
+                    except:
+                        # TODO: FIND POSSIBILITY FOR INDEXING ERROR IN CLASSIFICATION FILTER
+                        print("[ERROR]: AN UNEXPECTED ERROR OCCURED DURING IMAGE DECODING ( {} ). SKIPPING FRAME ...".format(error))
+                        continue
+                    
                     if len(read_code) > 0:
                         # SAVE TELEMETRYi and IMAGEi FOR ESTIMATION TESTS
                         csv_out.writerow( data )
@@ -94,11 +102,14 @@ def runIdentifiaction_hwil():
 
     cap_obj.release()
 
-if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        prog='runIdentification.py',
+        description='''UT-Lift Script for Aerial Vehicles Identifying and Locating Markered Ground Crates'''
+    )
     parser.add_argument('--weights', nargs='+', type=str, default='yolov7.pt', help='model.pt path(s)')
-    parser.add_argument('--hwil', action='store_true', help='in LIFT hwil mode')
+    parser.add_argument('--hwil', action='store_false', help='in LIFT hwil mode')
     opt = parser.parse_args()
 
     # PREPARE DETECTION NETWORK MODEL
