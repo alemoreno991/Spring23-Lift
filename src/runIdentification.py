@@ -48,7 +48,7 @@ def runIdentifiaction_hwil():
     print("[INFO] READING IPC MESSAGES ON ZMQ TOPIC: {}".format(ipc_topic_enc))
 
     # OPEN CONNECTIONS AND START READING
-    with zmq.Context() as context, open('./data/telemetry.csv','wb') as fout:
+    with zmq.Context() as context, open('./data/telemetry.csv','w') as fout:
         # SETUP SERIAL CONNECTION
         socket = context.socket(zmq.SUB)
         socket.setsockopt(zmq.SUBSCRIBE, ipc_topic_enc)
