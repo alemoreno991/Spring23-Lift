@@ -4,11 +4,7 @@ import time
 
 def main():
     
-    cap_obj = None
-    if dplyC.CAPTURE_TYPE == 0:
-        cap_obj = rtrv_gs_cnct()
-    else:
-        print("[ERROR]: INVALID CAPTURE TYPE")
+    cap_obj = cv.VideoCapture( 'udpsrc port=1234 ! video/mpegts ! tsdemux ! queue ! h264parse ! nvv4l2decoder ! nvvidconv ! video/x-raw, format=BGRx ! videoconvert ! video/x-raw, format=BGR ! appsink sync=false drop=true max-buffers=1' , cv.CAP_GSTREAMER )
     
     if not cap_obj.isOpened():
         print('[ERROR]: CAPTURE OBJECT DID NOT OPEN ... EXITING')
@@ -18,6 +14,7 @@ def main():
 
     for ii in range(0,6):
         _,frame = cap_obj.read()
+        print('[DEBUG] NUMBER OF IMAGE COLOR CHANNELS: {}'.format( frame.shape[-1] ) )
         cv.imwrite('./gscnnct_bin/test_im{}.png'.format(ii),frame)
         print('[DEBUG]: IMAGE {} SAVED TO "./gscnnct_bin/". WAITING 5 SECONDS'.format(ii))
         time.sleep(5)
@@ -26,13 +23,6 @@ def main():
     cap_obj.release()
 
 
-def rtrv_gs_cnct():
-    # gspline = 'udpsrc port={} caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! nvv4l2decoder ! videoconvert ! appsink'.format(dplyC.NTWRK_RTRVL_PORT)
-    # gspline = 'udpsrc port={} ! tsdemux ! queue ! h264parse ! avdec_h264  ! videoconvert ! appsink'.format(dplyC.NTWRK_RTRVL_PORT)
-    gspline = 'udpsrc port={} ! tsdemux ! queue ! h264parse ! nvv4l2decoder ! videoconvert ! appsink'.format(dplyC.NTWRK_RTRVL_PORT)
-
-    gscap = cv.VideoCapture( gspline, cv.CAP_GSTREAMER )
-    return gscap
 
 
 if __name__ == "__main__":

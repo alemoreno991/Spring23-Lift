@@ -24,8 +24,6 @@ UI16_PACKET_SIZE = 0
 UI32_PACKET_SIZE = 0 
 F32_PACKET_SIZE = 20
 
-# GSTEAMER PIPELINE
-GSPLINE = 'udpsrc port=1234 ! tsdemux ! queue ! h264parse ! avdec_h264 ! videoconvert ! appsink drop=true max-buffers=1'
 
 # def parseTelemetryStreamPackets(inI):
 #     outI = inI
@@ -35,7 +33,7 @@ def runIdentifiaction_hwil():
 
     # PREPARE CAMERA STREAM CONNECTION
     print('[INFO]: ATTEMPTING TO OPEN CAPTURE OBJECT')
-    cap_obj = cv.VideoCapture( GSPLINE, cv.CAP_GSTREAMER )
+    cap_obj = cv.VideoCapture( 'udpsrc port=1234 ! video/mpegts ! tsdemux ! queue ! h264parse ! nvv4l2decoder ! nvvidconv ! video/x-raw, format=BGRx ! videoconvert ! video/x-raw, format=BGR ! appsink sync=false drop=true max-buffers=1' , cv.CAP_GSTREAMER )
     if not cap_obj.isOpened():
         print('[ERROR]: CAPTURE OBJECT DID NOT OPEN ... EXITING')
         exit(0)
@@ -62,6 +60,7 @@ def runIdentifiaction_hwil():
         i = 0
         
         # PRIMARY LOOP
+        print("[INFO]: STARTING PRIMARY LOOP")
         try:
             while True:
                 
@@ -81,7 +80,7 @@ def runIdentifiaction_hwil():
                         read_code = cfilter.decodeImageSection(imgi,bbcrnr,0,True)
                     except:
                         # TODO: FIND POSSIBILITY FOR INDEXING ERROR IN CLASSIFICATION FILTER
-                        print("[ERROR]: AN UNEXPECTED ERROR OCCURED DURING IMAGE DECODING ( {} ). SKIPPING FRAME ...".format(error))
+                        print("[ERROR]: AN UNEXPECTED ERROR OCCURED DURING IMAGE DECODING. SKIPPING FRAME ...")
                         continue
                     
                     if len(read_code) > 0:

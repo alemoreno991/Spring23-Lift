@@ -83,7 +83,7 @@ namespace Lift
 
 
                 // DO STUFF
-                std::cout << "Buffer length = " << std::dec << recv_buf.size() << std::endl;
+                // std::cout << "Buffer length = " << std::dec << recv_buf.size() << std::endl;
                 // std::array<uint8_t,493> G;
                 //std::copy(std::begin(recv_buf),std::end(recv_buf),std::begin(G));
                 // int S = G.size();
@@ -196,9 +196,9 @@ namespace Lift
                 for(int i=0; i<it16.size(); i++){
                     //std::cout << "In loop" << std::endl;
                     int iter16 = it16[i];
-                    std::cout << "Iter16 = " << iter16 << std::endl; 
+                    // std::cout << "Iter16 = " << iter16 << std::endl; 
                     if(recv_buf[iter16+1]==0 & recv_buf[iter16+2]==0 & recv_buf[iter16+3]==0){
-                        std::cout << "In header check loop" << std::endl;
+                        // std::cout << "In header check loop" << std::endl;
                         pByte[0] = recv_buf[iter16+4];
                         //std::cout << "pByte[0] = " << pByte[0] << std::endl; 
                         //printf("pByte[0] = %02x \n",pByte[0]);
@@ -238,11 +238,11 @@ namespace Lift
                 uint8_t pitchByte[4];
                 uint8_t rollByte[4];
                 uint8_t yawByte[4];
-                std::cout << "Iter17 size = " << it17.size() << std::endl;
+                // std::cout << "Iter17 size = " << it17.size() << std::endl;
                 for(int i=0; i<it17.size(); i++){
                     //std::cout << "In loop" << std::endl;
                     int iter17 = it17[i];
-                    std::cout << "Iter17 = " << iter17 << std::endl; 
+                    // std::cout << "Iter17 = " << iter17 << std::endl; 
                     if(recv_buf[iter17+1]==0 & recv_buf[iter17+2]==0 & recv_buf[iter17+3]==0){
                         //std::cout << "In header check loop" << std::endl;
                         pitchByte[0] = recv_buf[iter17+4];
@@ -286,11 +286,11 @@ namespace Lift
                 uint8_t lonByte[4];
                 uint8_t mslByte[4];
                 uint8_t aglByte[4];
-                std::cout << "Iter20 size = " << it20.size() << std::endl;
+                // std::cout << "Iter20 size = " << it20.size() << std::endl;
                 for(int i=0; i<it20.size(); i++){
                     //std::cout << "In loop" << std::endl;
                     int iter20 = it20[i];
-                    std::cout << "Iter20 = " << iter20 << std::endl; 
+                    // std::cout << "Iter20 = " << iter20 << std::endl; 
                     if(recv_buf[iter20+1]==0 & recv_buf[iter20+2]==0 & recv_buf[iter20+3]==0){
                         //std::cout << "In header check loop" << std::endl;
                         latByte[0] = recv_buf[iter20+4];
@@ -337,14 +337,14 @@ namespace Lift
                 uint8_t vyByte[4];
                 uint8_t vzByte[4];
                 for(int i=0; i<it21.size();i++){    
-                    std::cout << "it21 size: " << it21.size() << std::endl;
+                    // std::cout << "it21 size: " << it21.size() << std::endl;
                 }
 
                                 
                 for(int i=0; i<it21.size(); i++){
                     //std::cout << "In loop" << std::endl;
                     int iter21 = it21[i];
-                    std::cout << "Iter21 = " << iter21 << std::endl; 
+                    // std::cout << "Iter21 = " << iter21 << std::endl; 
                     if(recv_buf[iter21+1]==0 & recv_buf[iter21+2]==0 & recv_buf[iter21+3]==0){
                         //std::cout << "In header check loop" << std::endl;
                         vyByte[0] = recv_buf[iter21+16];

@@ -85,7 +85,7 @@ namespace utlift_zmq_cnnct{
             bool publish_test_messages( int16_t buffer[], const unsigned int PACKET_SIZE ){
                 
 
-                printf("Read %u data values\n", PACKET_SIZE);
+                // printf("Read %u data values\n", PACKET_SIZE);
                 zmq::message_t envelope( this -> envelope_size );
 
                 // TOPIC
@@ -106,7 +106,7 @@ namespace utlift_zmq_cnnct{
             bool publish_f32_messages( _Float32 buffer[], const unsigned int PACKET_SIZE ){
                 
 
-                printf("Read %u data values\n", PACKET_SIZE);
+                // printf("Read %u data values\n", PACKET_SIZE);
                 zmq::message_t envelope( this -> envelope_size );
 
                 // TOPIC
@@ -204,8 +204,8 @@ int main()
             break;
         }
 
-        printf("Message sent; i: %u, topic: %s\n", i, tcp_topic);
-        i += 1;
+        // printf("Message sent; i: %u, topic: %s\n", i, tcp_topic);
+        // i += 1;
         // c = getchar();
         // c = toupper(c);
         // putchar(c);
