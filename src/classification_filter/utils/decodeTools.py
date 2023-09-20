@@ -5,6 +5,12 @@ from . import metrics2D as est
 from . import decodeConst as dcdc
 from . import drawingTools as dt
 
+class cid_information:
+        def __init__(self, cid_corner_indx, cid_indx, cid_found):
+                self.corner_indx = cid_corner_indx
+                self.indx = cid_indx
+                self.found = cid_found
+
 def determineCandidateRectIDbars( src_atleast_grys, debug_mode, on_hardware = False):
         img_height, img_width = src_atleast_grys.shape
         rect_contours, rect_contours_pass1, rect_contour_centroids, rect_contour_angles, rect_contour_areas, poly_contour_areas = [], [], [], [], [], []
@@ -551,7 +557,7 @@ def determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debu
                 cv.waitKey(0)
 
         if( not( crnr0_area_nonzero or crnr1_area_nonzero or crnr2_area_nonzero or crnr3_area_nonzero ) ):
-                return cid_corner_indx, cid_indx, False
+                return cid_information( cid_corner_indx, cid_indx, False )
         
         cid_corner_indx = np.array( [ crnr0_total_area, crnr1_total_area, crnr2_total_area, crnr3_total_area ] ).argmax()        
         if( cid_corner_indx == 0 ):
@@ -563,7 +569,7 @@ def determineCIDIndices( src_eval_contours, row_seg, col_seg, segment_area, debu
         elif( cid_corner_indx == 3 ):
                 cid_indx = int(8)
 
-        return cid_corner_indx, cid_indx, True
+        return cid_information( cid_corner_indx, cid_indx, True )
         # LOCATING CIRCULAR IDENTIFIER - END
 
 
