@@ -70,6 +70,7 @@ def extractD1Domain(image, debug_mode, on_hardware = False):
 
         warped_image = []
         encodedImage = []
+        unwarped_center = []
         fc_median_distance = 0
         # EXTRACT WARPED IMAGE
         if( len(rect_contours) == 4 ):
@@ -88,6 +89,20 @@ def extractD1Domain(image, debug_mode, on_hardware = False):
         else: 
                 return [],dcdt.cid_information(-1,-1,False),[],[]
         
+        # GET CENTER OF ENCODING (UNWARPED)
+        try:
+                inv_transformation_mat = np.linalg.pinv( transformation_mat )
+                lx, ly, _ = warped_image.shape 
+                warped_center = np.array( [ [ [ lx/2, ly/2 ] ]], dtype="float32")
+                # print(warped_center)
+                unwarped_center = cv.perspectiveTransform(warped_center,inv_transformation_mat)
+                # print(unwarped_center)
+                # image_check = cv.circle(image.copy(), (int(unwarped_center[0][0][0]),int(unwarped_center[0][0][1])), 20, (int(255), int(0), int(0)), 3)
+                # cv.imwrite("check_1.png",image_check)
+        except:
+                print("[ERROR]: UNWARPED CENTER POINT NOT DETERMINED... CONTINUING")
+                pass
+
         ######################################################################################################################################### POSE DETERMINATION - START
         rvec, tvec = [],[]
         # SETTING UP APPROPRIATE SETTING FOR CONTOUR DETERMINATION - START
@@ -121,7 +136,7 @@ def extractD1Domain(image, debug_mode, on_hardware = False):
         if(debug_mode and (not on_hardware) and len(rect_contour_centroids) < 4 and len(rect_contour_centroids) > 1):
                 cv.imshow( "D1 ENCODED IMAGE", encodedImage); 
                 cv.waitKey()
-        return encoded_eval_contours, cid_info, rvec, tvec
+        return encoded_eval_contours, cid_info, unwarped_center[0][0], rvec, tvec
 
 
 
@@ -187,7 +202,7 @@ def decodeImage(image, cascade_debug_mode, cascade_on_hardware = False):
         elif(cascade_debug_mode == 3):
                 DEBUG_D1E_FLAG = True
                 DEBUG_DENC_FLAG = True
-        encodedImage, cid_info, _, _ = extractD1Domain(image, DEBUG_D1E_FLAG, cascade_on_hardware )
+        encodedImage, cid_info, crate_centerpt, _, _ = extractD1Domain(image, DEBUG_D1E_FLAG, cascade_on_hardware )
         if not cid_info.found:
                 return []
         if not len(encodedImage): 
@@ -200,7 +215,7 @@ def decodeImage(image, cascade_debug_mode, cascade_on_hardware = False):
                 else:
                         print('\n[RESULT]: ' + str(bit_encoding))
                 
-                return bit_encoding
+                return bit_encoding, crate_centerpt
 
 
 
@@ -220,7 +235,7 @@ def decodeImageSection(image, crnrs, cascade_debug_mode, cascade_on_hardware = F
         elif(cascade_debug_mode == 3):
                 DEBUG_D1E_FLAG = True
                 DEBUG_DENC_FLAG = True
-        encodedImage, cid_info, _, _ = extractD1Domain(image_section, DEBUG_D1E_FLAG, cascade_on_hardware )
+        encodedImage, cid_info, crate_centerpt, _, _ = extractD1Domain(image_section, DEBUG_D1E_FLAG, cascade_on_hardware )
         if not cid_info.found:
                 return []
         if not len(encodedImage): 
@@ -233,7 +248,7 @@ def decodeImageSection(image, crnrs, cascade_debug_mode, cascade_on_hardware = F
                 else:
                         print('\n[RESULT]: ' + str(bit_encoding))
                 
-                return bit_encoding
+                return bit_encoding, crate_centerpt
 
         
 

@@ -2,6 +2,7 @@ import argparse
 import csv 
 
 import cv2 as cv
+import numpy as np
 
 # DETECTION NNETWORK
 import detection_nnetwork.detectc as dtctnn
@@ -76,8 +77,12 @@ def runIdentifiaction_hwil():
                 for bbcrnr in bbcrnrs_list:
                     
                     read_code = []
+                    crate_center_pxlpt = []
                     try:
-                        read_code = cfilter.decodeImageSection(imgi,bbcrnr,0,True)
+                        read_code, sctn_cntr_pxlpnt = cfilter.decodeImageSection(imgi,bbcrnr,0,True)
+                        x1, y1 = int(bbcrnr[0]), int(bbcrnr[1])
+                        if len( sctn_cntr_pxlpnt ) > 0:
+                            crate_center_pxlpt = np.array( [ x1, y1 ] ) + sctn_cntr_pxlpnt
                     except:
                         # TODO: FIND POSSIBILITY FOR INDEXING ERROR IN CLASSIFICATION FILTER
                         print("[ERROR]: AN UNEXPECTED ERROR OCCURED DURING IMAGE DECODING. SKIPPING FRAME ...")
