@@ -82,7 +82,7 @@ def runIdentifiaction_hwil():
                         read_code, sctn_cntr_pxlpnt = cfilter.decodeImageSection(imgi,bbcrnr,0,True)
                         x1, y1 = int(bbcrnr[0]), int(bbcrnr[1])
                         if len( sctn_cntr_pxlpnt ) > 0:
-                            crate_center_pxlpt = np.array( [ x1, y1 ] ) + sctn_cntr_pxlpnt
+                            crate_center_pxlpt = np.transpose( np.array( [ x1, y1 ] ) + sctn_cntr_pxlpnt )
                     except:
                         # TODO: FIND POSSIBILITY FOR INDEXING ERROR IN CLASSIFICATION FILTER
                         print("[ERROR]: AN UNEXPECTED ERROR OCCURED DURING IMAGE DECODING. SKIPPING FRAME ...")

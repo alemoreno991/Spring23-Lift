@@ -16,15 +16,8 @@ def getCameraRayUV_C( image_pt ):
     y_p = image_pt[1]
     
     # ARBITRARY SCALING OF THE VIEW VECTOR
-    x_c_scaled, y_c_scaled, z_c_scaled = None, None, None
-
-    if cmc.CAMERA_MODEL == 0:
-        x_c_scaled = (x_p + 0.5) - cmc.IRSCAM_IMAGE_PWIDTH/2 
-        y_c_scaled = cmc.IRSCAM_IMAGE_PHEIGHT/2 - (y_p + 0.5)
-        z_c_scaled = cmc.IRSCAM_Z_C_SCALED
-    else:
-        x_c_scaled = (x_p + 0.5) - cmc.HSCAM_IMAGE_PWIDTH/2 
-        y_c_scaled = cmc.HSCAM_IMAGE_PHEIGHT/2 - (y_p + 0.5)
-        z_c_scaled = cmc.HSCAM_Z_C_SCALED
+    x_c_scaled = (x_p + 0.5) - cmc.CAM_IMAGE_PWIDTH/2 
+    y_c_scaled = cmc.CAM_IMAGE_PHEIGHT/2 - (y_p + 0.5)
+    z_c_scaled = cmc.CAM_Z_C_SCALED
 
     return normalized_vec3( np.array( [ [x_c_scaled],[y_c_scaled],[z_c_scaled] ] ) )

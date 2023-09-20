@@ -2,6 +2,29 @@ import numpy as np
 import math
 from . import calibrationConst as clbc
 
+class position:
+    def __init__(self,x_to,y_to,z_to):
+        self.x = x_to
+        self.y = y_to
+        self.z = z_to
+
+class attitude:
+    def __init__(self,roll_to,pitch_to,yaw_to):
+        self.roll = roll_to
+        self.pitch = pitch_to
+        self.yaw = yaw_to
+
+class pose:
+    def __init__( self, position, attitude ):
+        self.position = position
+        self.attitude = attitude 
+
+def DCM2d(rot):
+    return np.array(    [\
+                            [ math.cos(rot) , -math.sin(rot) ],\
+                            [ math.sin(rot) ,  math.cos(rot) ],\
+                        ] )
+
 def zDCM(rotz):
     return np.array(    [\
                             [ math.cos(rotz) , -math.sin(rotz) , 0 ],\
