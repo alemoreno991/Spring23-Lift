@@ -203,3 +203,4 @@ events.out*
 *_temp.py
 traced_model.pt
 tele_server
+*.csv
