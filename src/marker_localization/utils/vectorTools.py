@@ -7,7 +7,7 @@ def normalized_vec3( vec ):
     norm = math.sqrt( (vec**2).sum() )
     if norm != 0:
         return vec/norm
-    return np.zeros( [3,1] )
+    return np.zeros( (3,1) )
 
 
 # CALCULATE CAMERA RAY UNIT VECTOR

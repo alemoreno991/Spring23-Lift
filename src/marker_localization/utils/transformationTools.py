@@ -19,6 +19,12 @@ class pose:
         self.position = position
         self.attitude = attitude 
 
+def feet2meters( feet ):
+    return feet/3.28084
+
+def meters2feet( meters ):
+    return meters*3.28084
+
 def DCM2d(rot):
     return np.array(    [\
                             [ math.cos(rot) , -math.sin(rot) ],\
