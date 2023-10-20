@@ -54,4 +54,4 @@ compile_veronte_comm:
 	g++ -I./include veronteCommServer.cpp -o tele_server -pthread -lzmq
 
 run_identification:
-	python3 runIdentification.py --weights $(WEIGHTS_CUSTOM)
+	python3 runIdentification.py
