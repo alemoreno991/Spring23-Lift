@@ -1,21 +1,17 @@
-import argparse
-
-# DETECTION NNETWORK
-import detection_nnetwork.detectc as dtctnn
-
-# CLASSIFICATION FILTER
-import classification_filter.decodeImage as cfilter
-
-# ESTIMATION 
-import marker_localization.process_measurements as mrklcl
-
-# MANAGEMENT AND LOGGING
-import management_and_logging.management_and_logging as mnl
+import numpy as np
 
 if __name__ == "__main__":
         import utils.identificationOptions as ido
+        import detection_nnetwork.detectc as dtctnn
+        import classification_filter.decodeImage as cfilter
+        import marker_localization.process_measurements as mrklcl
+        import management_and_logging.management_and_logging as mnl
 else:
         from .utils import identificationOptions as ido
+        from .detection_nnetwork import detectc as dtctnn
+        from .classification_filter import decodeImage as cfilter
+        from .marker_localization import process_measurements as mrklcl
+        from .management_and_logging import management_and_logging as mnl
 
 
 class identificationStack():
@@ -27,8 +23,8 @@ class identificationStack():
 
     def __init__( self, options_TYPE ):
         options = ido.ids_opt( options_TYPE )
-        self.DS_Manager      = mnl.dataStreamManager( options.pipeline, options.cap_opt ) 
-        self.CS_Manager      = mnl.captureStreamManager( options.ds_sub_address_string  ) 
+        self.DS_Manager      = mnl.dataStreamManager( options.ds_sub_address_string  ) 
+        self.CS_Manager      = mnl.captureStreamManager( options.pipeline, options.cap_opt ) 
         self.logger          = mnl.dataLogger( options.logger_file_string  )
         print("[INFO] PREPARING DETECTION NETWORK MODEL ...")
         self.detectNN        = dtctnn.detectionNetwork( options.dnn_weights )

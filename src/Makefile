@@ -1,4 +1,4 @@
-SRC_DIR := $(PWD)/detection_nnetwork/src
+SRC_DIR := $(PWD)/identification_stack/detection_nnetwork/src
 YOLO_DIR := ${SRC_DIR}/yolov7
 CUSTOM_YOLO_DIR = $(PWD)/detection_nnetwork/customize_yolo
 export PYTHONPATH := ${YOLO_DIR}
@@ -15,33 +15,7 @@ WEIGHTS = $(CUSTOM_YOLO_DIR)/runs/default/yolov7/weights/default/yolov7-tiny.pt
 # Run the program configuration 
 MAIN = main.py
 NAME = yolov7-tiny-custom
-WEIGHTS_CUSTOM = $(PWD)/detection_nnetwork/customize_yolo/runs/train/$(NAME)/weights/best.pt
-
-# TEST_ITEM = $(PWD)/test_items/videos/test06132023.mp4
-TEST_ITEM = $(PWD)/test_items/images/test06132023.png
-
-
-run_default:
-	cd $(SRC_DIR); python $(MAIN) --conf 0.8 
-
-run_custom:
-	cd $(SRC_DIR); python $(MAIN) --weights $(WEIGHTS_CUSTOM)
-
-test_on_item:
-	cd $(YOLO_DIR) && \
-	python3 detect.py --weights $(WEIGHTS_CUSTOM) \
-		--source $(TEST_ITEM) \
-		--conf 0.75 \
-		--project $(CUSTOM_YOLO_DIR)/runs/detect
-
-# test_composite_on_item:
-# 	python3 detectc.py --weights $(WEIGHTS_CUSTOM) \
-# 		--source $(TEST_ITEM) \
-# 		--conf 0.75 \
-# 		--project $(CUSTOM_YOLO_DIR)/runs/detectc
-
-test_misc_detect:
-	python3 test_temp.py --weights $(WEIGHTS_CUSTOM)
+WEIGHTS_CUSTOM = $(PWD)/identification_stack/detection_nnetwork/customize_yolo/runs/train/$(NAME)/weights/best.pt
 
 train:
 	cd $(YOLO_DIR) && \
@@ -49,9 +23,8 @@ train:
 	--epochs $(EPOCHS) --img $(IMG_SIZE) --data $(DATA_CONFIG) --hyp $(HYP_CONFIG) \
 	--cfg $(CFG_CONFIG) --project $(PROJ_DIR) --name $(NAME) --weights $(WEIGHTS)
 
+run_sitest_identification:
+	python3 runSIIdentification.py
 
 compile_veronte_comm:
 	g++ -I./include veronteCommServer.cpp -o tele_server -pthread -lzmq
-
-run_identification:
-	python3 runIdentification.py

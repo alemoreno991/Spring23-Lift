@@ -39,33 +39,14 @@ services:
               capabilities: [gpu]
     command: bash -c "make train"
 
-  # detect-item:
-  #   build:
-  #     context: ./
-  #     shm_size: '64g'
-  #     dockerfile: ./Dockerfile-utcdusxyolo
-  #   image: utexascdus/utcdusxyolo_detect_item:1.0
-  #   shm_size: '64g'
-  #   container_name: utxyolo_detect_item
-  #   volumes: 
-  #     - ../src:/workspace_utcdusxyolo/
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         devices:
-  #           - driver: nvidia
-  #             count: all
-  #             capabilities: [gpu]
-  #   command: bash -c "make test_composite_on_item"
-
-  detect-test:
+  stack-test:
     build:
       context: ./
       shm_size: '64g'
       dockerfile: ./Dockerfile-utcdusxyolo
-    image: utexascdus/utcdusxyolo_detect_item:1.0
+    image: utexascdus/utcdusxyolo_stack_test:1.0
     shm_size: '64g'
-    container_name: utxyolo_detect_item
+    container_name: utxyolo_stack_test
     volumes: 
       - ../src:/workspace_utcdusxyolo/
     deploy:
@@ -75,4 +56,4 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-    command: bash -c "make test_misc_detect"
+    command: bash -c "make run_sitest_identification"
