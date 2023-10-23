@@ -1,4 +1,4 @@
 [submodule "src/yolov7"]
-	path = src/detection_nnetwork/src/yolov7
+	path = src/identification_stack/detection_nnetwork/src/yolov7
 	branch = main
 	url = https://github.com/aJimenez19037/yolov7.git
