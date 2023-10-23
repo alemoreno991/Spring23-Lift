@@ -12,18 +12,10 @@ import marker_localization.process_measurements as mrklcl
 # MANAGEMENT AND LOGGING
 import management_and_logging.management_and_logging as mnl
 
-
-class ids_opt:
-    def __init__(self, pipleline, cap_opt, dnn_weights, ds_sub_address_string, logger_file_string):
-        self.pipleline, self.cap_opt, self.dnn_weights, self.ds_sub_address_string, self.logger_file_string = \
-             pipleline,      cap_opt,      dnn_weights,      ds_sub_address_string,      logger_file_string
-        
-    # CAPTURE OPTS
-    pipleline, cap_opt, dnn_weights = None, None , None
-    # DATA STREAM OPTS
-    ds_sub_address_string = None
-    # LOGGER OPTS
-    logger_file_string = None
+if __name__ == "__main__":
+        import utils.identificationOptions as ido
+else:
+        from .utils import identificationOptions as ido
 
 
 class identificationStack():
@@ -33,7 +25,8 @@ class identificationStack():
     logger          = None 
     detectNN        = None
 
-    def __init__( self, options ):
+    def __init__( self, options_TYPE ):
+        options = ido.ids_opt( options_TYPE )
         self.DS_Manager      = mnl.dataStreamManager( options.pipeline, options.cap_opt ) 
         self.CS_Manager      = mnl.captureStreamManager( options.ds_sub_address_string  ) 
         self.logger          = mnl.dataLogger( options.logger_file_string  )
