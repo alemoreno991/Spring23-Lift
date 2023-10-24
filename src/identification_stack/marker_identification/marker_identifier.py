@@ -8,7 +8,7 @@ else:
         from .detection_nnetwork import detectc as dtctnn
         from .classification_filter import imageClassifiers as cfilter
 
-class marker_identifier():
+class marker_identifier:
     
     classification  = None
     detection       = None
