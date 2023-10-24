@@ -1,7 +1,7 @@
 SRC_DIR := $(PWD)/identification_stack/detection_nnetwork/src
 YOLO_DIR := ${SRC_DIR}/yolov7
 CUSTOM_YOLO_DIR = $(PWD)/detection_nnetwork/customize_yolo
-export PYTHONPATH := ${YOLO_DIR}
+export PYTHONPATH := ${YOLO_DIR}:${PYTHONPATH}
 
 # Training configuration
 EPOCHS = 30
