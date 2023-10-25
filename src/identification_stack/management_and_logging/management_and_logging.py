@@ -3,7 +3,7 @@ import csv
 
 import cv2 as cv
 import numpy as np
-# import pyrealsense2 as rs
+import pyrealsense2 as rs
 
 # SERIAL CONNECTION ICP PACKAGES
 import zmq

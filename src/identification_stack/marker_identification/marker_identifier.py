@@ -27,7 +27,7 @@ class marker_identifier:
             self.classification = cfilter.utlift_classifier( True, 0 )
 
         elif( self.cls_opt == r'aruco' ):
-            aruco_opts          = cfilter.aruco_options( cv.aruco.DetectorParameters_create(), cv.aruco.DICT_4X4_50 )
+            aruco_opts          = cfilter.aruco_options( cv.aruco.DetectorParameters_create(), cv.aruco.Dictionary_get( cv.aruco.DICT_4X4_50 ) )
             self.classification = cfilter.aruco_classifier( aruco_opts )
 
 

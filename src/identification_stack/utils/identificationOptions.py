@@ -26,7 +26,7 @@ class ids_opt:
     ###################################################################################################################################################################################################################################################################################
 
         if(   type == r'A' ):  # SINGLE IMAGE INPUT
-            self.dnn_weights            =  r'./identification_stack/marker_identification/detection_nnetwork/customize_yolo/runs/train/yolov7-tiny-custom/weights/best.pt'
+            # self.dnn_weights            =  r'./identification_stack/marker_identification/detection_nnetwork/customize_yolo/runs/train/yolov7-tiny-custom/weights/best.pt'
             self.classification_type    =  r'aruco'
 
         elif( type == r'B' ):  # HWIL STREAMED INPUTS
@@ -34,12 +34,12 @@ class ids_opt:
             self.cap_opt                =  cv.CAP_GSTREAMER
             self.ds_sub_address_string  =  r"tcp://127.0.0.1:5555"
             self.logger_file_string     =  r'./data/telemetry.csv'
-            self.dnn_weights            =  r'./identification_stack/marker_identification/detection_nnetwork/customize_yolo/runs/train/yolov7-tiny-custom/weights/best.pt'
+            # self.dnn_weights            =  r'./identification_stack/marker_identification/detection_nnetwork/customize_yolo/runs/train/yolov7-tiny-custom/weights/best.pt'
             self.classification_type    =  r'aruco'
 
         elif( type == r'C' ):  # INTEL REALSENSE W/O DATA STREAM
             self.cap_opt                =  r'IRSD455'
-            self.dnn_weights            =  r'./identification_stack/marker_identification/detection_nnetwork/customize_yolo/runs/train/yolov7-tiny-custom/weights/best.pt'
+            # self.dnn_weights            =  r'./identification_stack/marker_identification/detection_nnetwork/customize_yolo/runs/train/yolov7-tiny-custom/weights/best.pt'
             self.classification_type    =  r'aruco'
 
 

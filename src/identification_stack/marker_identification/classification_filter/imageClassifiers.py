@@ -290,7 +290,7 @@ class aruco_classifier:
                 img                             = cv.cvtColor(imgi, cv.COLOR_BGR2GRAY)
                 bbcrnrs_list, read_code_list, _ = cv.aruco.detectMarkers(img, self.options.dictionary, parameters=self.options.parameters)
                 if len(bbcrnrs_list) > 0: 
-                        cntr_pxlpt_list = []*len(bbcrnrs_list)
+                        cntr_pxlpt_list = [None]*len(bbcrnrs_list)
                         for ii in range( 0, len(bbcrnrs_list) ):
                                 crnrs                   = bbcrnrs_list[ii].reshape((4, 2))
                                 crnr_tl, _ , crnr_br, _ = crnrs
