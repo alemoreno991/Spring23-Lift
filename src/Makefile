@@ -26,5 +26,11 @@ train:
 run_sitest_identification:
 	python3 runSIIdentification.py
 
+run_irstest_identification:
+	python3 runIRSIdentification.py
+
+run_flight_test_1:
+	python3 runFlightTest_1_Identification.py
+
 compile_veronte_comm:
 	g++ -I./include veronteCommServer.cpp -o tele_server -pthread -lzmq

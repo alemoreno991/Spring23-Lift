@@ -23,6 +23,13 @@ class ids_opt:
             self.dnn_weights            =  r'./identification_stack/marker_identification/detection_nnetwork/customize_yolo/runs/train/yolov7-tiny-custom/weights/best.pt'
             self.classification_type    =  r'utlift'
 
+        elif( type == r'FT1' ):  # INTEL REALSENSE ON BIRD
+            self.cap_opt                =  r'IRSD455'
+            self.ds_sub_address_string  =  r"tcp://127.0.0.1:5555"
+            self.logger_file_string     =  r'./data/telemetry.csv'
+            self.dnn_weights            =  r'./identification_stack/marker_identification/detection_nnetwork/customize_yolo/runs/train/yolov7-tiny-custom/weights/best.pt'
+            self.classification_type    =  r'utlift'
+
     ###################################################################################################################################################################################################################################################################################
 
         if(   type == r'A' ):  # SINGLE IMAGE INPUT
@@ -42,6 +49,11 @@ class ids_opt:
             # self.dnn_weights            =  r'./identification_stack/marker_identification/detection_nnetwork/customize_yolo/runs/train/yolov7-tiny-custom/weights/best.pt'
             self.classification_type    =  r'aruco'
 
+        elif( type == r'FTA' ):  # INTEL REALSENSE ON BIRD
+            self.cap_opt                =  r'IRSD455'
+            self.ds_sub_address_string  =  r"tcp://127.0.0.1:5555"
+            self.logger_file_string     =  r'./data/telemetry.csv'
+            self.classification_type    =  r'aruco'
 
         else:
             print( "[WARNING]: INVALID OR ALL-NONE TYPE SPECIFIED " )
