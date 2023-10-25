@@ -15,14 +15,14 @@ class marker_identifier:
     cls_opt         = None
     is_dtct_opt     = False
 
-    def __init__( self, cls_opt, dtct_opt = None ):
+    def __init__( self, cls_opt, dnn_weights = None ):
 
         self.cls_opt        = cls_opt
-        self.is_dtct_opt    = not (dtct_opt is None)
+        self.is_dtct_opt    = not (dnn_weights is None)
 
         if( self.cls_opt == r'utlift' and self.is_dtct_opt  ):
             print("[INFO] PREPARING DETECTION NETWORK MODEL ...")
-            self.detection      = dtctnn.detectionNetwork( dtct_opt.dnn_weights )
+            self.detection      = dtctnn.detectionNetwork( dnn_weights )
             print("[INFO] DETECTION NETWORK MODEL PREPARED ...")
             self.classification = cfilter.utlift_classifier( True, 0 )
 

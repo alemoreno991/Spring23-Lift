@@ -27,6 +27,9 @@ class identificationStack():
         self.logger          = mnl.dataLogger( options.logger_file_string  )
         self.identifier      = mrklid.marker_identifier(  options.classification_type, options.dnn_weights )
     
+    def runSIIdentification( self, imgi ):
+        return self.identifier.runIdentification( imgi )
+
     def runIdentificationStream_wData( self ):
         try:
             # GRAB IMAGE AND TELEMETRY DATA

@@ -108,12 +108,12 @@ class utlift_classifier:
                         lx, ly, _ = warped_image.shape 
                         warped_center = np.array( [ [ [ lx/2, ly/2 ] ]], dtype="float32")
                         # print(warped_center)
-                        unwarped_center = cv.perspectiveTransform(warped_center,inv_transformation_mat)
+                        unwarped_center = cv.perspectiveTransform(warped_center,inv_transformation_mat)[0][0]
                         # print(unwarped_center)
                         # image_check = cv.circle(image.copy(), (int(unwarped_center[0][0][0]),int(unwarped_center[0][0][1])), 20, (int(255), int(0), int(0)), 3)
                         # cv.imwrite("check_1.png",image_check)
                 except:
-                        print("[ERROR]: UNWARPED CENTER POINT NOT DETERMINED... CONTINUING")
+                        print("[WARNING]: UNWARPED CENTER POINT NOT DETERMINED... USING BOUNDING BOX CENTER")
                         pass
 
                 ######################################################################################################################################### POSE DETERMINATION - START
@@ -149,7 +149,8 @@ class utlift_classifier:
                 if(debug_mode and (not on_hardware) and len(rect_contour_centroids) < 4 and len(rect_contour_centroids) > 1):
                         cv.imshow( "D1 ENCODED IMAGE", encodedImage); 
                         cv.waitKey()
-                return encoded_eval_contours, cid_info, unwarped_center[0][0], rvec, tvec
+
+                return encoded_eval_contours, cid_info, unwarped_center, rvec, tvec
 
 
 
@@ -250,6 +251,11 @@ class utlift_classifier:
                         DEBUG_D1E_FLAG = True
                         DEBUG_DENC_FLAG = True
                 encodedImage, cid_info, crate_centerpt, _, _ = self.extractD1Domain(image_in, DEBUG_D1E_FLAG, self.cascade_on_hardware )
+                if( not len( crate_centerpt ) > 0 and not ( crnrs is None ) ):
+                        cntrx = ( x2 - x1 )/2
+                        cntry = ( y2 - y1 )/2
+                        crate_centerpt = [ cntrx, cntry ] 
+
                 if not cid_info.found:
                         return []
                 if not len(encodedImage): 
