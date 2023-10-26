@@ -60,7 +60,7 @@ class LPS_Estimators:
                 lk_I = np.transpose( trnt.rpyDCM( bodyposek.attitude.roll, bodyposek.attitude.pitch, bodyposek.attitude.yaw  ) ) * cmrc.CAM_POS_B
                 range_meas = ( (z_meas + lk_I[2] ) /vk_hat_I[2] )
                 vk_I = range_meas * vk_hat_I
-                rBI_I = trnt.llaWGS84_to_lenu( bodyposek.position )
+                rBI_I = trnt.llaWGS84_to_lenu( [ bodyposek.position.x, bodyposek.position.y, bodyposek.position.z ] ) # lla
                 zk_I = rBI_I + lk_I + vk_I
                 alphak = self.weight_function( range_meas ) / self.scale
 
@@ -80,7 +80,7 @@ class LPS_Estimators:
                         * cmrc.CAM_RBC * vk_hat_C
                 vk_I = range_meas * vk_hat_I
                 lk_I = np.transpose( trnt.rpyDCM( bodyposek.attitude.roll, bodyposek.attitude.pitch, bodyposek.attitude.yaw  ) ) * cmrc.CAM_POS_B
-                rBI_I = trnt.llaWGS84_to_lenu( bodyposek.position )
+                rBI_I = trnt.llaWGS84_to_lenu( [ bodyposek.position.x, bodyposek.position.y, bodyposek.position.z ]  )
                 zk_I = rBI_I + lk_I + vk_I
                 alphak = self.weight_function( range_meas ) / self.scale
 
