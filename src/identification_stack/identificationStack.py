@@ -46,6 +46,22 @@ class identificationStack():
             return False
         
         return False
+    
+    def runIdentificationStream_woData( self ):
+        try:
+            imgi = self.CS_Manager.get_Image()
+            read_code, _ = self.identifier.runIdentification( imgi )
+
+            if len(read_code) > 0:
+                # SAVE TELEMETRYi and IMAGEi FOR ESTIMATION TESTS
+                self.logger.save_img( imgi )
+                return True
+            
+        except:
+            return False
+        
+        return False
+
 
     def runIdentificationTestStream( self ):
         try:
@@ -53,7 +69,7 @@ class identificationStack():
             read_code, cntr = self.identifier.runIdentification( imgi )
             if len(read_code) > 0 and len(cntr) > 0:
                 imgi = cv.circle( imgi.copy(), (int(cntr[0][0]),int(cntr[0][1])), 20, (int(255), int(0), int(0)), 3)
-            cv.imshow( 'rgb', imgi )
+            # cv.imshow( 'rgb', imgi )
 
             if len(read_code) > 0:
                 self.logger.save_img( imgi )
@@ -68,13 +84,32 @@ class identificationStack():
     def runContinuousIdentifiactionStream( self, stop_indx = float('inf') ):            
         print("[INFO]: STARTING PRIMARY LOOP")
         ii = 0
-        while ii < stop_indx:
-            try:
-                found = self.runIdentificationStream_wData()
-                if found:
-                    ii += 1
-            except:
-                continue
+        try:
+            while ii < stop_indx:
+                try:
+                    found = self.runIdentificationStream_wData()
+                    if found:
+                        ii += 1
+                except:
+                    continue
+        except KeyboardInterrupt:
+            print("[INFO] STOP COMMAND RECIEVED ... CLOSING COLLECTION. DATA IS IN ./data")
+
+
+    def runContinuousIdentifiactionStream_woData( self, stop_indx = float('inf') ):            
+        print("[INFO]: STARTING PRIMARY LOOP")
+        ii = 0
+        try: 
+            while ii < stop_indx:
+                try:
+                    found = self.runIdentificationStream_woData()
+                    if found:
+                        ii += 1
+                except:
+                    continue
+        except KeyboardInterrupt:
+            print("[INFO] STOP COMMAND RECIEVED ... CLOSING COLLECTION. DATA IS IN ./data")
+
 
     def runContinuousIdentifiactionTestStream( self, stop_indx = float('inf') ):            
         print("[INFO]: STARTING PRIMARY LOOP")

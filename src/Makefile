@@ -29,6 +29,9 @@ run_sitest_identification:
 run_irstest_identification:
 	python3 runIRSIdentification.py
 
+run_flight_test_0:
+	python3 runFlightTest_0_Identification.py
+
 run_flight_test_1:
 	python3 runFlightTest_1_Identification.py
 

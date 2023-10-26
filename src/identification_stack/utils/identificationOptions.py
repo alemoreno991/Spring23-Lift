@@ -23,6 +23,11 @@ class ids_opt:
             self.dnn_weights            =  r'./identification_stack/marker_identification/detection_nnetwork/customize_yolo/runs/train/yolov7-tiny-custom/weights/best.pt'
             self.classification_type    =  r'utlift'
 
+        elif( type == r'FT0' ):  # INTEL REALSENSE ON BIRD
+            self.cap_opt                =  r'IRSD455'
+            self.dnn_weights            =  r'./identification_stack/marker_identification/detection_nnetwork/customize_yolo/runs/train/yolov7-tiny-custom/weights/best.pt'
+            self.classification_type    =  r'utlift'
+
         elif( type == r'FT1' ):  # INTEL REALSENSE ON BIRD
             self.cap_opt                =  r'IRSD455'
             self.ds_sub_address_string  =  r"tcp://127.0.0.1:5555"
@@ -47,6 +52,10 @@ class ids_opt:
         elif( type == r'C' ):  # INTEL REALSENSE W/O DATA STREAM
             self.cap_opt                =  r'IRSD455'
             # self.dnn_weights            =  r'./identification_stack/marker_identification/detection_nnetwork/customize_yolo/runs/train/yolov7-tiny-custom/weights/best.pt'
+            self.classification_type    =  r'aruco'
+
+        elif( type == r'FTA0' ):  # INTEL REALSENSE ON BIRD
+            self.cap_opt                =  r'IRSD455'
             self.classification_type    =  r'aruco'
 
         elif( type == r'FTA' ):  # INTEL REALSENSE ON BIRD
